@@ -1,14 +1,30 @@
-Django==5.2.4
+# === Core Web Frameworks ===
+Django==5.0.4
+fastapi==0.103.2
+uvicorn==0.24.0
+gunicorn==21.2.0
+
+# === Database & ORM ===
 django-mssql-backend==2.8.1
-pyodbc==5.2.0
+pyodbc==5.1.0
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9   # optional, if PostgreSQL used in local/dev
+
+# === Data & File Utilities ===
 openpyxl==3.1.2
 reportlab==4.0.7
+
+# === Authentication & Security ===
 django-allauth==0.63.3
 requests-oauthlib==1.4.0
-fastapi==0.104.1
-uvicorn==0.24.0
-sqlalchemy==2.0.23
-pydantic==2.7.4
 python-jose[cryptography]==3.3.0
 python-multipart==0.0.6
 passlib[bcrypt]==1.7.4
+
+# === Validation & Typing ===
+pydantic==2.4.2
+pydantic-core==2.10.1
+typing-extensions==4.12.2
+
+# === Environment & Misc ===
+python-dotenv==1.0.1
