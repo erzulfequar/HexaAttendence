@@ -1,0 +1,251 @@
+{% extends 'core/base.html' %}
+
+{% block extra_head %}
+<style>
+/* Hide sidebar for employee task submission page */
+.sidebar {
+    display: none !important;
+}
+
+/* Adjust main content width when sidebar is hidden */
+main[role="main"] {
+    width: 100% !important;
+    margin-left: 0 !important;
+}
+
+/* Hide top navbar for employees */
+.navbar {
+    display: none !important;
+}
+
+/* Adjust page title spacing */
+.pt-3.pb-2.mb-3.border-bottom {
+    display: none !important;
+}
+
+/* Hide messages section for employees */
+.messages {
+    display: none !important;
+}
+
+/* Custom styling for task submission page */
+body {
+    background-color: #f8f9fa;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-header {
+    background-color: #007bff;
+    color: white;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+#video, #canvas {
+    border: 2px solid #dee2e6;
+    border-radius: 0.375rem;
+    max-width: 100%;
+    height: auto;
+}
+</style>
+{% endblock %}
+
+{% block page_title %}Submit Task - HexaAttendance Portal{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header">
+                <h5>Submit Task: {{ task.task_type }}</h5>
+            </div>
+            <div class="card-body">
+                <!-- Task Details -->
+                <div class="alert alert-info">
+                    <h6>Task Details:</h6>
+                    <p><strong>Description:</strong> {{ task.task_description }}</p>
+                    <p><strong>Company:</strong> {{ task.visiting_company_name|default:'N/A' }}</p>
+                    <p><strong>Location:</strong> {{ task.company_location|default:'N/A' }}</p>
+                    <p><strong>Due Date:</strong> {{ task.due_date|default:'N/A' }}</p>
+                </div>
+
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="location_lat" class="form-label">Location Latitude</label>
+                                <input type="number" step="any" class="form-control" id="location_lat" name="location_lat" required>
+                                <div class="form-text">Current location latitude</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="location_lng" class="form-label">Location Longitude</label>
+                                <input type="number" step="any" class="form-control" id="location_lng" name="location_lng" required>
+                                <div class="form-text">Current location longitude</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Any additional notes about the task completion"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Capture Selfie with Location</label>
+                        <div id="camera-container">
+                            <video id="video" width="320" height="240" autoplay muted></video>
+                            <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+                            <br>
+                            <button type="button" id="capture-btn" class="btn btn-primary mt-2">Capture Photo</button>
+                            <button type="button" id="retake-btn" class="btn btn-secondary mt-2" style="display:none;">Retake</button>
+                        </div>
+                        <input type="hidden" id="selfie-data" name="selfie">
+                        <div class="form-text">Capture a live photo with date, time, and location overlay</div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'employee' %}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-success">Submit Task</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Get current location
+function getLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition, showError);
+    } else {
+        alert("Geolocation is not supported by this browser.");
+    }
+}
+
+function showPosition(position) {
+    document.getElementById("location_lat").value = position.coords.latitude;
+    document.getElementById("location_lng").value = position.coords.longitude;
+}
+
+function showError(error) {
+    switch(error.code) {
+        case error.PERMISSION_DENIED:
+            alert("User denied the request for Geolocation.");
+            break;
+        case error.POSITION_UNAVAILABLE:
+            alert("Location information is unavailable.");
+            break;
+        case error.TIMEOUT:
+            alert("The request to get user location timed out.");
+            break;
+        case error.UNKNOWN_ERROR:
+            alert("An unknown error occurred.");
+            break;
+    }
+}
+
+// Camera functionality
+let video = document.getElementById('video');
+let canvas = document.getElementById('canvas');
+let captureBtn = document.getElementById('capture-btn');
+let retakeBtn = document.getElementById('retake-btn');
+let selfieData = document.getElementById('selfie-data');
+let stream;
+
+async function startCamera() {
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+    } catch (err) {
+        alert('Error accessing camera: ' + err.message);
+    }
+}
+
+function stopCamera() {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+    }
+}
+
+function capturePhoto() {
+    const context = canvas.getContext('2d');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Add timestamp and location overlay
+    const now = new Date();
+    const timestamp = now.toLocaleString();
+    const lat = document.getElementById("location_lat").value;
+    const lng = document.getElementById("location_lng").value;
+    const locationText = `Lat: ${lat}, Lng: ${lng}`;
+
+    context.font = '16px Arial';
+    context.fillStyle = 'white';
+    context.strokeStyle = 'black';
+    context.lineWidth = 2;
+
+    // Background for text
+    context.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    context.fillRect(10, canvas.height - 60, canvas.width - 20, 50);
+
+    context.fillStyle = 'white';
+    context.strokeText(timestamp, 20, canvas.height - 35);
+    context.fillText(timestamp, 20, canvas.height - 35);
+
+    context.strokeText(locationText, 20, canvas.height - 15);
+    context.fillText(locationText, 20, canvas.height - 15);
+
+    // Convert to data URL
+    const dataURL = canvas.toDataURL('image/jpeg');
+    selfieData.value = dataURL;
+
+    // Show captured image
+    video.style.display = 'none';
+    canvas.style.display = 'block';
+    captureBtn.style.display = 'none';
+    retakeBtn.style.display = 'inline-block';
+}
+
+function retakePhoto() {
+    video.style.display = 'block';
+    canvas.style.display = 'none';
+    captureBtn.style.display = 'inline-block';
+    retakeBtn.style.display = 'none';
+    selfieData.value = '';
+}
+
+// Event listeners
+captureBtn.addEventListener('click', capturePhoto);
+retakeBtn.addEventListener('click', retakePhoto);
+
+// Auto-get location and start camera when page loads
+window.onload = function() {
+    getLocation();
+    startCamera();
+};
+
+// Stop camera when page unloads
+window.onbeforeunload = function() {
+    stopCamera();
+};
+</script>
+{% endblock %}

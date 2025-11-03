@@ -1,0 +1,89 @@
+{% extends 'core/base.html' %}
+
+{% block page_title %}Configure Work Week{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-calendar"></i> Configure Work Week Settings</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <p class="text-muted mb-4">Configure which days are working days in your organization.</p>
+
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Day</th>
+                                    <th>Working Day</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for day in work_week %}
+                                <tr>
+                                    <td>{{ day.day|title }}</td>
+                                    <td>
+                                        {% if day.is_working_day %}
+                                            <span class="badge bg-success">Yes</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">No</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox"
+                                                   id="switch_{{ day.id }}"
+                                                   name="is_working_{{ day.id }}"
+                                                   {% if day.is_working_day %}checked{% endif %}>
+                                            <label class="form-check-label" for="switch_{{ day.id }}">
+                                                {% if day.is_working_day %}Working{% else %}Non-working{% endif %}
+                                            </label>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Note:</strong> Changes to work week settings will affect attendance calculations and leave policies.
+                    </div>
+
+                    <div class="form-group mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Work Week Settings
+                        </button>
+                        <a href="{% url 'settings' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Settings
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update labels when switches are toggled
+    const switches = document.querySelectorAll('.form-check-input');
+    switches.forEach(function(switchEl) {
+        switchEl.addEventListener('change', function() {
+            const label = this.nextElementSibling;
+            if (this.checked) {
+                label.textContent = 'Working';
+            } else {
+                label.textContent = 'Non-working';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

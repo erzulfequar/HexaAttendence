@@ -1,0 +1,379 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Manager Profile - HexaAttendance Portal{% endblock %}
+
+{% block page_title %}Manager Profile{% endblock %}
+
+{% block content %}
+<!-- Welcome Section -->
+<div class="welcome-section mb-4">
+    <div class="card welcome-card">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h2 class="welcome-title">Welcome back, {{ manager.first_name }}! 👋</h2>
+                    <p class="welcome-subtitle">Here's your attendance overview for today</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="current-time">
+                        <i class="fas fa-clock"></i>
+                        <span id="currentTime"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Manager Info Card -->
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card manager-info-card h-100">
+            <div class="card-header bg-gradient-primary">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-user-tie me-2"></i>Manager Information
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="manager-avatar mb-3">
+                    <i class="fas fa-user-tie fa-5x text-primary"></i>
+                </div>
+                <h5 class="manager-name">{{ manager.first_name }} {{ manager.last_name }}</h5>
+                <p class="manager-code text-muted">{{ manager.employee_code }}</p>
+                <div class="manager-details">
+                    <div class="detail-item">
+                        <i class="fas fa-building"></i>
+                        <span>{{ manager.department.department_name }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-briefcase"></i>
+                        <span>{{ manager.designation.designation_name }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-envelope"></i>
+                        <span>{{ manager.email }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-clock"></i>
+                        <span>{{ manager.shift.shift_name }} ({{ manager.shift.start_time }} - {{ manager.shift.end_time }})</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Attendance -->
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card attendance-card h-100">
+            <div class="card-header bg-gradient-success">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-calendar-day me-2"></i>Today's Attendance
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                {% if today_attendance %}
+                    <div class="attendance-status">
+                        {% if today_attendance.status == 'present' %}
+                            <div class="status-icon present">
+                                <i class="fas fa-check-circle fa-4x"></i>
+                            </div>
+                            <h4 class="status-text text-success">Present</h4>
+                        {% elif today_attendance.status == 'absent' %}
+                            <div class="status-icon absent">
+                                <i class="fas fa-times-circle fa-4x"></i>
+                            </div>
+                            <h4 class="status-text text-danger">Absent</h4>
+                        {% else %}
+                            <div class="status-icon partial">
+                                <i class="fas fa-clock fa-4x"></i>
+                            </div>
+                            <h4 class="status-text text-warning">{{ today_attendance.status|title }}</h4>
+                        {% endif %}
+                    </div>
+                    <div class="attendance-details mt-3">
+                        {% if today_attendance.in_time %}
+                            <div class="time-detail">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span><strong>In:</strong> {{ today_attendance.in_time }}</span>
+                            </div>
+                        {% endif %}
+                        {% if today_attendance.out_time %}
+                            <div class="time-detail">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span><strong>Out:</strong> {{ today_attendance.out_time }}</span>
+                            </div>
+                        {% endif %}
+                        {% if today_attendance.total_hours %}
+                            <div class="time-detail">
+                                <i class="fas fa-hourglass-half"></i>
+                                <span><strong>Hours:</strong> {{ today_attendance.total_hours }} hrs</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="attendance-status">
+                        <div class="status-icon not-marked">
+                            <i class="fas fa-question-circle fa-4x"></i>
+                        </div>
+                        <h4 class="status-text text-muted">Not Marked</h4>
+                        <p class="text-muted">Attendance not recorded yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="col-lg-4 col-md-12 mb-4">
+        <div class="card quick-actions-card h-100">
+            <div class="card-header bg-gradient-info">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="action-buttons">
+                    <a href="{% url 'manager_own_attendance' %}" class="btn btn-primary btn-action mb-3 w-100">
+                        <i class="fas fa-calendar-check me-2"></i>
+                        <span>My Attendance</span>
+                    </a>
+                    <a href="{% url 'manager_own_leave' %}" class="btn btn-success btn-action mb-3 w-100">
+                        <i class="fas fa-calendar-plus me-2"></i>
+                        <span>My Leave</span>
+                    </a>
+                    <a href="{% url 'manager_own_payroll' %}" class="btn btn-info btn-action mb-3 w-100">
+                        <i class="fas fa-money-bill-wave me-2"></i>
+                        <span>My Payroll</span>
+                    </a>
+                    <a href="{% url 'manager' %}" class="btn btn-warning btn-action mb-3 w-100">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <button class="btn btn-danger btn-action w-100" onclick="logout()">
+                        <i class="fas fa-sign-out-alt me-2"></i>
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Row -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card">
+            <div class="card-body text-center">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar-check text-success"></i>
+                </div>
+                <h3 class="stat-number">{{ attendance_stats.present_days|default:0 }}</h3>
+                <p class="stat-label">Present Days</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card">
+            <div class="card-body text-center">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar-times text-danger"></i>
+                </div>
+                <h3 class="stat-number">{{ attendance_stats.absent_days|default:0 }}</h3>
+                <p class="stat-label">Absent Days</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card">
+            <div class="card-body text-center">
+                <div class="stat-icon">
+                    <i class="fas fa-clock text-warning"></i>
+                </div>
+                <h3 class="stat-number">{{ attendance_stats.half_days|default:0 }}</h3>
+                <p class="stat-label">Half Days</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card">
+            <div class="card-body text-center">
+                <div class="stat-icon">
+                    <i class="fas fa-hourglass-half text-info"></i>
+                </div>
+                <h3 class="stat-number">{{ attendance_stats.total_hours|default:0 }}</h3>
+                <p class="stat-label">Total Hours</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Attendance -->
+    <div class="col-lg-6 mb-4">
+        <div class="card attendance-history-card">
+            <div class="card-header bg-gradient-primary">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-history me-2"></i>Recent Attendance
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th><i class="fas fa-calendar"></i> Date</th>
+                                <th><i class="fas fa-info-circle"></i> Status</th>
+                                <th><i class="fas fa-sign-in-alt"></i> In</th>
+                                <th><i class="fas fa-sign-out-alt"></i> Out</th>
+                                <th><i class="fas fa-clock"></i> Hours</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for att in attendance %}
+                            <tr>
+                                <td><strong>{{ att.date|date:"M d, Y" }}</strong></td>
+                                <td>
+                                    {% if att.status == 'present' %}
+                                        <span class="badge bg-success rounded-pill">
+                                            <i class="fas fa-check"></i> Present
+                                        </span>
+                                    {% elif att.status == 'absent' %}
+                                        <span class="badge bg-danger rounded-pill">
+                                            <i class="fas fa-times"></i> Absent
+                                        </span>
+                                    {% elif att.status == 'half_day' %}
+                                        <span class="badge bg-warning rounded-pill">
+                                            <i class="fas fa-adjust"></i> Half Day
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary rounded-pill">{{ att.status|title }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ att.in_time|default:"-" }}</td>
+                                <td>{{ att.out_time|default:"-" }}</td>
+                                <td>
+                                    {% if att.total_hours %}
+                                        <span class="badge bg-info">{{ att.total_hours }}h</span>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    <i class="fas fa-calendar-times fa-2x mb-2"></i>
+                                    <br>No attendance records found
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tasks -->
+    <div class="col-lg-6 mb-4">
+        <div class="card tasks-card">
+            <div class="card-header bg-gradient-warning">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-tasks me-2"></i>Assigned Tasks
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if tasks %}
+                    <div class="task-list">
+                        {% for task in tasks %}
+                        <div class="task-item">
+                            <div class="task-header">
+                                <div class="task-type">
+                                    <i class="fas fa-tag"></i>
+                                    <span>{{ task.task_type }}</span>
+                                </div>
+                                <div class="task-status">
+                                    {% if task.status == 'completed' %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle"></i> Completed
+                                        </span>
+                                    {% elif task.status == 'in_progress' %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-spinner fa-spin"></i> In Progress
+                                        </span>
+                                    {% elif task.status == 'cancelled' %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times-circle"></i> Cancelled
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-clock"></i> Pending
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="task-description">
+                                {{ task.task_description|truncatechars:50 }}
+                            </div>
+                            {% if task.status != 'completed' %}
+                                <div class="task-action">
+                                    <button class="btn btn-sm btn-primary" onclick="submitTask({{ task.task_id }})">
+                                        <i class="fas fa-paper-plane"></i> Submit
+                                    </button>
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No tasks assigned</h5>
+                        <p class="text-muted">You're all caught up!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Update current time
+function updateTime() {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+    });
+    document.getElementById('currentTime').textContent = timeString;
+}
+
+// Update time every second
+setInterval(updateTime, 1000);
+updateTime(); // Initial call
+
+function submitTask(taskId) {
+    window.location.href = '/employee/tasks/' + taskId + '/submit/';
+}
+
+function logout() {
+    window.location.href = '/logout/';
+}
+
+// Add smooth animations on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+{% endblock %}

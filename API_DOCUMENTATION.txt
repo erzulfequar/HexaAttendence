@@ -1,0 +1,560 @@
+# HEXA ATTENDANCE PORTAL - API DOCUMENTATION
+
+## Base URL
+```
+http://localhost:8001/api
+```
+
+## Authentication
+All endpoints (except login) require Bearer token authentication:
+```
+Authorization: Bearer <your_jwt_token>
+```
+
+## Get Token
+```http
+POST /api/token
+Content-Type: application/json
+
+{
+    "username": "your_username",
+    "password": "your_password"
+}
+```
+
+---
+
+## EMPLOYEE MODULE
+
+### Attendance Endpoints
+
+#### Mark Attendance
+```http
+POST /api/employee/attendance/mark
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+
+Parameters:
+- punch_type: string (IN/OUT)
+- punch_time: string (optional, ISO format)
+- geo_lat: float (optional)
+- geo_long: float (optional)
+- photo: file (optional, selfie)
+```
+
+#### Get Attendance History
+```http
+GET /api/employee/attendance/history?page=1&limit=50&start_date=2025-01-01&end_date=2025-01-31
+Authorization: Bearer <token>
+```
+
+#### Get Attendance Summary
+```http
+GET /api/employee/attendance/summary?page=1&limit=30&month=1&year=2025
+Authorization: Bearer <token>
+```
+
+#### Get Today's Attendance
+```http
+GET /api/employee/attendance/today
+Authorization: Bearer <token>
+```
+
+#### Get Attendance Statistics
+```http
+GET /api/employee/attendance/stats?start_date=2025-01-01&end_date=2025-01-31
+Authorization: Bearer <token>
+```
+
+### Leave Endpoints
+
+#### Apply for Leave
+```http
+POST /api/employee/leave/apply
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+    "leave_type_id": 1,
+    "start_date": "2025-01-15",
+    "end_date": "2025-01-17",
+    "total_days": 3,
+    "reason": "Medical appointment"
+}
+```
+
+#### Get Leave Status
+```http
+GET /api/employee/leave/status?page=1&limit=20&status_filter=pending
+Authorization: Bearer <token>
+```
+
+#### Get Leave Types
+```http
+GET /api/employee/leave/types
+Authorization: Bearer <token>
+```
+
+#### Get Leave Balance
+```http
+GET /api/employee/leave/balance
+Authorization: Bearer <token>
+```
+
+#### Get Leave Calendar
+```http
+GET /api/employee/leave/calendar?month=1&year=2025
+Authorization: Bearer <token>
+```
+
+### Profile Endpoints
+
+#### Get Employee Profile
+```http
+GET /api/profile
+Authorization: Bearer <token>
+```
+
+---
+
+## MANAGER MODULE
+
+### Employee Management
+
+#### Get Team Members
+```http
+GET /api/manager/employees?page=1&limit=50&search=john
+Authorization: Bearer <manager_token>
+```
+
+#### Get Employee Details
+```http
+GET /api/manager/employees/{employee_id}
+Authorization: Bearer <manager_token>
+```
+
+### Attendance Management
+
+#### Get Team Attendance Overview
+```http
+GET /api/manager/attendance/overview?start_date=2025-01-01&end_date=2025-01-31
+Authorization: Bearer <manager_token>
+```
+
+#### Get Employee Attendance Details
+```http
+GET /api/manager/attendance/{employee_id}?start_date=2025-01-01&end_date=2025-01-31
+Authorization: Bearer <manager_token>
+```
+
+### Leave Management
+
+#### Get Pending Leave Applications
+```http
+GET /api/manager/leaves/pending?page=1&limit=20
+Authorization: Bearer <manager_token>
+```
+
+#### Approve Leave Application
+```http
+POST /api/manager/leaves/{leave_id}/approve
+Authorization: Bearer <manager_token>
+```
+
+#### Reject Leave Application
+```http
+POST /api/manager/leaves/{leave_id}/reject
+Authorization: Bearer <manager_token>
+Content-Type: application/json
+
+{
+    "rejection_reason": "Insufficient leave balance"
+}
+```
+
+### Dashboard
+
+#### Get Manager Dashboard
+```http
+GET /api/manager/dashboard
+Authorization: Bearer <manager_token>
+```
+
+---
+
+## ADMIN MODULE
+
+### User Management
+
+#### Get All Users
+```http
+GET /api/admin/users?page=1&limit=50&search=john&role_filter=employee&status_filter=active
+Authorization: Bearer <admin_token>
+```
+
+#### Create User
+```http
+POST /api/admin/users
+Authorization: Bearer <admin_token>
+Content-Type: application/json
+
+{
+    "username": "john_doe",
+    "email": "john@example.com",
+    "first_name": "John",
+    "last_name": "Doe",
+    "password": "securepassword",
+    "role_id": 2,
+    "employee_code": "EMP001",
+    "mobile": "+1234567890"
+}
+```
+
+#### Update User
+```http
+PUT /api/admin/users/{user_id}
+Authorization: Bearer <admin_token>
+Content-Type: application/json
+
+{
+    "email": "john.doe@example.com",
+    "first_name": "John",
+    "last_name": "Doe",
+    "role_id": 3,
+    "mobile": "+1234567890",
+    "is_active": true
+}
+```
+
+#### Delete User
+```http
+DELETE /api/admin/users/{user_id}
+Authorization: Bearer <admin_token>
+```
+
+### Employee Management
+
+#### Get All Employees
+```http
+GET /api/admin/employees?page=1&limit=50&search=john&department_filter=1&status_filter=active
+Authorization: Bearer <admin_token>
+```
+
+#### Get Departments
+```http
+GET /api/admin/departments
+Authorization: Bearer <admin_token>
+```
+
+#### Get Designations
+```http
+GET /api/admin/designations
+Authorization: Bearer <admin_token>
+```
+
+#### Get Roles
+```http
+GET /api/admin/roles
+Authorization: Bearer <admin_token>
+```
+
+### Attendance Management
+
+#### Get Company Attendance Overview
+```http
+GET /api/admin/attendance/overview?start_date=2025-01-01&end_date=2025-01-31&department_filter=1
+Authorization: Bearer <admin_token>
+```
+
+#### Get Attendance Logs
+```http
+GET /api/admin/attendance/logs?page=1&limit=100&employee_filter=1&date_filter=2025-01-15&status_filter=approved
+Authorization: Bearer <admin_token>
+```
+
+### Leave Management
+
+#### Get Leave Overview
+```http
+GET /api/admin/leaves/overview?start_date=2025-01-01&end_date=2025-01-31&status_filter=approved
+Authorization: Bearer <admin_token>
+```
+
+#### Get Leave Applications
+```http
+GET /api/admin/leaves/applications?page=1&limit=50&status_filter=pending&employee_filter=1
+Authorization: Bearer <admin_token>
+```
+
+### Payroll Management
+
+#### Get Payroll Overview
+```http
+GET /api/admin/payroll/overview?start_date=2025-01-01&end_date=2025-01-31
+Authorization: Bearer <admin_token>
+```
+
+### System Statistics
+
+#### Get Admin Dashboard
+```http
+GET /api/admin/dashboard
+Authorization: Bearer <admin_token>
+```
+
+---
+
+## GENERAL MODULE
+
+### Attendance (Legacy/Backward Compatibility)
+
+#### Mark Attendance
+```http
+POST /api/attendance/mark
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+```
+
+#### Get Attendance History
+```http
+GET /api/attendance/history?page=1&limit=50
+Authorization: Bearer <token>
+```
+
+#### Get Attendance Summary
+```http
+GET /api/attendance/summary?page=1&limit=30
+Authorization: Bearer <token>
+```
+
+### Leave (Legacy/Backward Compatibility)
+
+#### Apply for Leave
+```http
+POST /api/leave/apply
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+#### Get Leave Status
+```http
+GET /api/leave/status?page=1&limit=20
+Authorization: Bearer <token>
+```
+
+#### Get Leave Types
+```http
+GET /api/leave/types
+Authorization: Bearer <token>
+```
+
+### Payroll
+
+#### Get Payslips
+```http
+GET /api/payroll/payslips?page=1&limit=12
+Authorization: Bearer <token>
+```
+
+---
+
+## RESPONSE FORMATS
+
+### Success Response Format
+```json
+{
+    "message": "Success message",
+    "data": { ... },  // Response data
+    "total": 100,     // For paginated responses
+    "page": 1,        // For paginated responses
+    "limit": 50       // For paginated responses
+}
+```
+
+### Error Response Format
+```json
+{
+    "detail": "Error message",
+    "status_code": 400,
+    "timestamp": "2025-11-03T06:41:45.000Z"
+}
+```
+
+### Authentication Response Format
+```json
+{
+    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+    "token_type": "bearer"
+}
+```
+
+---
+
+## ROLE-BASED ACCESS CONTROL
+
+### Employee Role
+- Can access: Employee module endpoints
+- Cannot access: Manager or Admin endpoints
+
+### Manager Role
+- Can access: Employee module + Manager module endpoints
+- Cannot access: Admin endpoints
+
+### Admin Role
+- Can access: All endpoints (Employee, Manager, Admin)
+
+---
+
+## ERROR CODES
+
+| Code | Description |
+|------|-------------|
+| 200 | Success |
+| 400 | Bad Request |
+| 401 | Unauthorized |
+| 403 | Forbidden (Insufficient permissions) |
+| 404 | Not Found |
+| 500 | Internal Server Error |
+
+---
+
+## ANDROID APP INTEGRATION
+
+### Required Libraries for Android
+```kotlin
+// Add to build.gradle (Module: app)
+implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+implementation 'com.squareup.okhttp3:okhttp:4.9.0'
+implementation 'com.squareup.okhttp3:logging-interceptor:4.9.0'
+```
+
+### API Service Interface (Android)
+```kotlin
+import retrofit2.Response
+import retrofit2.http.*
+
+interface ApiService {
+    
+    // Authentication
+    @POST("token")
+    suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
+    
+    // Employee Attendance
+    @Multipart
+    @POST("employee/attendance/mark")
+    suspend fun markAttendance(
+        @Part("punch_type") punchType: RequestBody,
+        @Part("geo_lat") geoLat: RequestBody? = null,
+        @Part("geo_long") geoLong: RequestBody? = null,
+        @Part image: MultipartBody.Part? = null
+    ): Response<AttendanceResponse>
+    
+    @GET("employee/attendance/history")
+    suspend fun getAttendanceHistory(
+        @Query("page") page: Int = 1,
+        @Query("limit") limit: Int = 50,
+        @Query("start_date") startDate: String? = null,
+        @Query("end_date") endDate: String? = null
+    ): Response<AttendanceHistoryResponse>
+    
+    // Employee Leave
+    @POST("employee/leave/apply")
+    suspend fun applyLeave(@Body request: LeaveRequest): Response<LeaveResponse>
+    
+    @GET("employee/leave/status")
+    suspend fun getLeaveStatus(
+        @Query("page") page: Int = 1,
+        @Query("limit") limit: Int = 20
+    ): Response<LeaveStatusResponse>
+    
+    // Manager
+    @GET("manager/employees")
+    suspend fun getTeamEmployees(
+        @Query("page") page: Int = 1,
+        @Query("limit") limit: Int = 50
+    ): Response<TeamEmployeesResponse>
+    
+    @GET("manager/leaves/pending")
+    suspend fun getPendingLeaves(
+        @Query("page") page: Int = 1,
+        @Query("limit") limit: Int = 20
+    ): Response<PendingLeavesResponse>
+    
+    @POST("manager/leaves/{leaveId}/approve")
+    suspend fun approveLeave(@Path("leaveId") leaveId: Int): Response<GenericResponse>
+    
+    @POST("manager/leaves/{leaveId}/reject")
+    suspend fun rejectLeave(
+        @Path("leaveId") leaveId: Int,
+        @Body request: RejectionRequest
+    ): Response<GenericResponse>
+    
+    // Admin
+    @GET("admin/users")
+    suspend fun getAllUsers(
+        @Query("page") page: Int = 1,
+        @Query("limit") limit: Int = 50
+    ): Response<UsersResponse>
+    
+    @GET("admin/dashboard")
+    suspend fun getAdminDashboard(): Response<AdminDashboardResponse>
+}
+```
+
+### Data Classes (Android)
+```kotlin
+// Request/Response Data Classes
+data class LoginRequest(
+    val username: String,
+    val password: String
+)
+
+data class LoginResponse(
+    val access_token: String,
+    val token_type: String
+)
+
+data class AttendanceRequest(
+    val punch_type: String,
+    val geo_lat: Double? = null,
+    val geo_long: Double? = null
+)
+
+data class AttendanceResponse(
+    val message: String,
+    val attendance_id: Int
+)
+
+data class LeaveRequest(
+    val leave_type_id: Int,
+    val start_date: String,
+    val end_date: String,
+    val total_days: Double,
+    val reason: String
+)
+
+data class GenericResponse(
+    val message: String
+)
+
+// ... Additional data classes
+```
+
+---
+
+## NOTES
+
+1. **Image Upload**: Use multipart/form-data for attendance selfies
+2. **Date Format**: Use ISO format (YYYY-MM-DD)
+3. **Time Format**: Use ISO format (HH:MM:SS) with timezone
+4. **Pagination**: Use 'page' and 'limit' parameters for paginated responses
+5. **Error Handling**: Always check response codes and handle errors appropriately
+6. **Security**: Store JWT tokens securely on Android device
+7. **Offline Support**: Implement local storage for offline attendance marking
+
+---
+
+**Last Updated**: 2025-11-03
+**API Version**: 1.0.0
+**Base URL**: http://localhost:8001/api

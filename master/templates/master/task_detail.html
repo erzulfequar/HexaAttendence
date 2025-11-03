@@ -1,0 +1,155 @@
+{% extends 'core/base.html' %}
+
+{% block page_title %}Task Details{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5>Task Details - {{ task.task_id }}</h5>
+                <a href="{% url 'master' %}" class="btn btn-secondary btn-sm">Back to Master</a>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Task Information</h6>
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Task Type:</strong></td>
+                                <td>{{ task.task_type }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Employee:</strong></td>
+                                <td>{{ task.allotted_employee.first_name }} {{ task.allotted_employee.last_name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Approved By:</strong></td>
+                                <td>{% if task.approved_by %}{{ task.approved_by.username }}{% else %}N/A{% endif %}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Date Assigned:</strong></td>
+                                <td>{{ task.date_assigned }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Due Date:</strong></td>
+                                <td>{{ task.due_date|default:'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Status:</strong></td>
+                                <td>
+                                    <span class="badge bg-{% if task.status == 'completed' %}success{% elif task.status == 'in_progress' %}warning{% elif task.status == 'cancelled' %}danger{% else %}secondary{% endif %}">
+                                        {{ task.status|title }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Location Information</h6>
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Company Name:</strong></td>
+                                <td>{{ task.visiting_company_name|default:'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Location:</strong></td>
+                                <td>{{ task.company_location|default:'N/A' }}</td>
+                            </tr>
+                        </table>
+                        <h6>Description</h6>
+                        <p>{{ task.task_description }}</p>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <h6>Update Status</h6>
+                    <form method="post" action="{% url 'update_task_status' task.task_id %}" class="d-inline">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-4">
+                                <select name="status" class="form-select">
+                                    <option value="pending" {% if task.status == 'pending' %}selected{% endif %}>Pending</option>
+                                    <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                    <option value="completed" {% if task.status == 'completed' %}selected{% endif %}>Completed</option>
+                                    <option value="cancelled" {% if task.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary">Update Status</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6>Task Submissions</h6>
+            </div>
+            <div class="card-body">
+                {% if submissions %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Submitted By</th>
+                                <th>Submitted At</th>
+                                <th>Location</th>
+                                <th>Selfie</th>
+                                <th>Verified</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for submission in submissions %}
+                            <tr>
+                                <td>{{ submission.submission_id }}</td>
+                                <td>{{ submission.submitted_by.first_name }} {{ submission.submitted_by.last_name }}</td>
+                                <td>{{ submission.submitted_at }}</td>
+                                <td>
+                                    {% if submission.location_lat and submission.location_lng %}
+                                        {{ submission.location_lat }}, {{ submission.location_lng }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if submission.selfie %}
+                                        <a href="{{ submission.selfie.url }}" target="_blank">View</a>
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if submission.verified %}success{% else %}warning{% endif %}">
+                                        {% if submission.verified %}Verified{% else %}Pending{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-success" onclick="verifySubmission({{ submission.submission_id }})">
+                                        {% if submission.verified %}Unverify{% else %}Verify{% endif %}
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No submissions yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function verifySubmission(submissionId) {
+    // This would need AJAX implementation for real-time verification
+    alert('Verification functionality would be implemented with AJAX');
+}
+</script>
+{% endblock %}

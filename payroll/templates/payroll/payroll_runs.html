@@ -1,0 +1,70 @@
+{% extends 'core/base.html' %}
+
+{% block page_title %}Payroll Runs{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <a href="{% url 'payroll_dashboard' %}" class="btn btn-secondary btn-sm me-2">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                    <h5 class="d-inline"><i class="fas fa-play"></i> Payroll Runs</h5>
+                </div>
+                <a href="{% url 'create_payroll_run' %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus"></i> New Run
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Period</th>
+                                <th>Run Date</th>
+                                <th>Status</th>
+                                <th>Employees</th>
+                                <th>Total Net Pay</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for run in runs %}
+                            <tr>
+                                <td>{{ run.run_id }}</td>
+                                <td>{{ run.period.period_name }}</td>
+                                <td>{{ run.run_date|date:"d M Y H:i" }}</td>
+                                <td>
+                                    <span class="badge bg-{% if run.status == 'completed' %}success{% elif run.status == 'processing' %}warning{% elif run.status == 'cancelled' %}danger{% else %}secondary{% endif %}">
+                                        {{ run.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ run.total_employees }}</td>
+                                <td>₹{{ run.total_net_pay|floatformat:2 }}</td>
+                                <td>
+                                    <a href="{% url 'view_payslip' run.run_id %}" class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    {% if run.status == 'draft' %}
+                                    <a href="{% url 'process_payroll_run' run.run_id %}" class="btn btn-sm btn-outline-success">
+                                        <i class="fas fa-play"></i> Process
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center">No payroll runs found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

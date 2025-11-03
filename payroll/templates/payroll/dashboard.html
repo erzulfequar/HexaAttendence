@@ -1,0 +1,79 @@
+{% extends 'core/base.html' %}
+
+{% block page_title %}Payroll Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary mb-3">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-users"></i> Total Employees</h5>
+                <h2 class="card-text">{{ total_employees }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning mb-3">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-play-circle"></i> Active Payroll Runs</h5>
+                <h2 class="card-text">{{ active_payroll_runs }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-check-circle"></i> Completed Runs</h5>
+                <h2 class="card-text">{{ completed_runs }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info mb-3">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-rupee-sign"></i> Total Net Pay</h5>
+                <h2 class="card-text">₹{{ total_net_pay|floatformat:2 }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-tasks"></i> Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-2">
+                        <a href="{% url 'salary_components' %}" class="btn btn-outline-primary btn-block">
+                            <i class="fas fa-cogs"></i> Salary Components
+                        </a>
+                    </div>
+                    <div class="col-md-2">
+                        <a href="{% url 'employee_salaries' %}" class="btn btn-outline-primary btn-block">
+                            <i class="fas fa-money-bill-wave"></i> Employee Salaries
+                        </a>
+                    </div>
+                    <div class="col-md-2">
+                        <a href="{% url 'payroll_periods' %}" class="btn btn-outline-primary btn-block">
+                            <i class="fas fa-calendar-alt"></i> Payroll Periods
+                        </a>
+                    </div>
+                    <div class="col-md-2">
+                        <a href="{% url 'payroll_runs' %}" class="btn btn-outline-primary btn-block">
+                            <i class="fas fa-play"></i> Payroll Runs
+                        </a>
+                    </div>
+                    <div class="col-md-2">
+                        <a href="{% url 'payslips' %}" class="btn btn-outline-primary btn-block">
+                            <i class="fas fa-file-invoice-dollar"></i> Payslips
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

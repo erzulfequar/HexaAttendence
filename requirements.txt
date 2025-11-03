@@ -1,0 +1,14 @@
+Django==5.2.4
+django-mssql-backend==2.8.1
+pyodbc==5.2.0
+openpyxl==3.1.2
+reportlab==4.0.7
+django-allauth==0.63.3
+requests-oauthlib==1.4.0
+fastapi==0.104.1
+uvicorn==0.24.0
+sqlalchemy==2.0.23
+pydantic==2.7.4
+python-jose[cryptography]==3.3.0
+python-multipart==0.0.6
+passlib[bcrypt]==1.7.4

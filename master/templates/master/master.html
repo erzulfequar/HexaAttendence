@@ -1,0 +1,347 @@
+{% extends 'core/base.html' %}
+
+{% block page_title %}Master Data Management{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Master Data Overview</h5>
+            </div>
+            <div class="card-body">
+                <!-- Statistics Row -->
+                <div class="row mb-4">
+                    <div class="col-md-2">
+                        <div class="card bg-info text-white">
+                            <div class="card-body text-center">
+                                <h4>{{ departments.count }}</h4>
+                                <p>Departments</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card bg-success text-white">
+                            <div class="card-body text-center">
+                                <h4>{{ designations.count }}</h4>
+                                <p>Designations</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body text-center">
+                                <h4>{{ employees.count }}</h4>
+                                <p>Employees</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body text-center">
+                                <h4>{{ shifts.count }}</h4>
+                                <p>Shifts</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body text-center">
+                                <h4>{{ devices.count }}</h4>
+                                <p>Devices</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card bg-secondary text-white">
+                            <div class="card-body text-center">
+                                <h4>{{ holidays.count }}</h4>
+                                <p>Holidays</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card bg-dark text-white">
+                            <div class="card-body text-center">
+                                <h4>{{ tasks.count }}</h4>
+                                <p>Tasks</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Tables -->
+                <div class="row">
+                    <!-- Departments -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6>Departments</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Name</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for dept in departments %}
+                                            <tr>
+                                                <td>{{ dept.department_id }}</td>
+                                                <td>{{ dept.department_name }}</td>
+                                                <td>
+                                                    <span class="badge bg-{% if dept.is_active %}success{% else %}danger{% endif %}">
+                                                        {% if dept.is_active %}Active{% else %}Inactive{% endif %}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Designations -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6>Designations</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Name</th>
+                                                <th>Description</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for desg in designations %}
+                                            <tr>
+                                                <td>{{ desg.designation_id }}</td>
+                                                <td>{{ desg.designation_name }}</td>
+                                                <td>{{ desg.description|truncatechars:20 }}</td>
+                                                <td>
+                                                    <span class="badge bg-{% if desg.is_active %}success{% else %}danger{% endif %}">
+                                                        {% if desg.is_active %}Active{% else %}Inactive{% endif %}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Shifts -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6>Shifts</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Name</th>
+                                                <th>Start Time</th>
+                                                <th>End Time</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for shift in shifts %}
+                                            <tr>
+                                                <td>{{ shift.shift_id }}</td>
+                                                <td>{{ shift.shift_name }}</td>
+                                                <td>{{ shift.start_time }}</td>
+                                                <td>{{ shift.end_time }}</td>
+                                                <td>
+                                                    <span class="badge bg-{% if shift.is_active %}success{% else %}danger{% endif %}">
+                                                        {% if shift.is_active %}Active{% else %}Inactive{% endif %}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Employees -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6>Employees</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Code</th>
+                                                <th>Name</th>
+                                                <th>Department</th>
+                                                <th>Designation</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for emp in employees %}
+                                            <tr>
+                                                <td>{{ emp.employee_code }}</td>
+                                                <td>{{ emp.first_name }} {{ emp.last_name }}</td>
+                                                <td>{{ emp.department.department_name }}</td>
+                                                <td>{{ emp.designation.designation_name }}</td>
+                                                <td>
+                                                    <span class="badge bg-{% if emp.status %}success{% else %}danger{% endif %}">
+                                                        {% if emp.status %}Active{% else %}Inactive{% endif %}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Devices -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6>Devices</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Name</th>
+                                                <th>Serial</th>
+                                                <th>IP Address</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for device in devices %}
+                                            <tr>
+                                                <td>{{ device.device_id }}</td>
+                                                <td>{{ device.device_name }}</td>
+                                                <td>{{ device.serial_number }}</td>
+                                                <td>{{ device.ip_address }}</td>
+                                                <td>
+                                                    <span class="badge bg-{% if device.status == 'online' %}success{% else %}danger{% endif %}">
+                                                        {{ device.status|title }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Holidays -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6>Holidays</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Date</th>
+                                                <th>Description</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for holiday in holidays %}
+                                            <tr>
+                                                <td>{{ holiday.holiday_id }}</td>
+                                                <td>{{ holiday.holiday_date }}</td>
+                                                <td>{{ holiday.description }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tasks -->
+                    <div class="col-md-12 mb-4">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6>Tasks</h6>
+                                <a href="{% url 'create_task' %}" class="btn btn-primary btn-sm">Create Task</a>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Type</th>
+                                                <th>Employee</th>
+                                                <th>Description</th>
+                                                <th>Company</th>
+                                                <th>Location</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for task in tasks %}
+                                            <tr>
+                                                <td>{{ task.task_id }}</td>
+                                                <td>{{ task.task_type }}</td>
+                                                <td>{{ task.allotted_employee.first_name }} {{ task.allotted_employee.last_name }}</td>
+                                                <td>{{ task.task_description|truncatechars:30 }}</td>
+                                                <td>{{ task.visiting_company_name }}</td>
+                                                <td>{{ task.company_location }}</td>
+                                                <td>
+                                                    <span class="badge bg-{% if task.status == 'completed' %}success{% elif task.status == 'in_progress' %}warning{% elif task.status == 'cancelled' %}danger{% else %}secondary{% endif %}">
+                                                        {{ task.status|title }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <a href="{% url 'task_detail' task.task_id %}" class="btn btn-sm btn-info">View</a>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

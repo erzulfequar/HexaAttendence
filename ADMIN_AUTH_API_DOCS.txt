@@ -1,0 +1,550 @@
+# ADMIN AUTHENTICATION & USER CREATION API DOCUMENTATION
+
+## Base URL
+```
+http://localhost:8001
+```
+
+---
+
+## ADMIN AUTHENTICATION ENDPOINTS
+
+### 1. Admin Login
+```http
+POST /api/admin/login
+Content-Type: application/json
+
+{
+    "username": "admin_username",
+    "password": "admin_password"
+}
+```
+
+**Response:**
+```json
+{
+    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+    "token_type": "bearer"
+}
+```
+
+**Error Response (Non-Admin User):**
+```json
+{
+    "detail": "Admin access required",
+    "status_code": 403
+}
+```
+
+---
+
+## USER CREATION ENDPOINTS
+
+### 2. Create User (Generic)
+```http
+POST /api/admin/create-user
+Content-Type: application/x-www-form-urlencoded
+
+username=john_doe&email=john@example.com&first_name=John&last_name=Doe&password=securepass123&role_id=2&employee_code=EMP001&mobile=+1234567890
+```
+
+**Parameters:**
+- `username` (required): Unique username
+- `email` (required): User's email address
+- `first_name` (required): First name
+- `last_name` (required): Last name
+- `password` (required): User password
+- `role_id` (optional): Role ID for the user
+- `employee_code` (optional): Employee code
+- `mobile` (optional): Mobile number
+
+**Success Response:**
+```json
+{
+    "message": "User created successfully",
+    "user_id": 123,
+    "username": "john_doe",
+    "email": "john@example.com"
+}
+```
+
+### 3. Create Admin User
+```http
+POST /api/admin/create-admin
+Content-Type: application/x-www-form-urlencoded
+
+username=admin2&email=admin2@company.com&first_name=Admin&last_name=User&password=admin123&mobile=+1987654321
+```
+
+**Success Response:**
+```json
+{
+    "message": "Admin user created successfully",
+    "user_id": 124,
+    "username": "admin2",
+    "role": "Admin"
+}
+```
+
+### 4. Create Manager User
+```http
+POST /api/admin/create-manager
+Content-Type: application/x-www-form-urlencoded
+
+username=manager1&email=manager@company.com&first_name=Team&last_name=Manager&password=manager123&employee_code=MGR001&mobile=+1123456789
+```
+
+**Success Response:**
+```json
+{
+    "message": "Manager user created successfully",
+    "user_id": 125,
+    "username": "manager1",
+    "role": "Manager"
+}
+```
+
+### 5. Create Employee User
+```http
+POST /api/admin/create-employee
+Content-Type: application/x-www-form-urlencoded
+
+username=employee1&email=employee@company.com&first_name=John&last_name=Employee&password=emp123&employee_code=EMP002&mobile=+1234567890
+```
+
+**Success Response:**
+```json
+{
+    "message": "Employee user created successfully",
+    "user_id": 126,
+    "username": "employee1",
+    "role": "Employee"
+}
+```
+
+---
+
+## AUTHENTICATION CHECK ENDPOINT
+
+### 6. Check Admin Authentication
+```http
+GET /api/admin/check-auth
+Authorization: Bearer <admin_token>
+```
+
+**Success Response:**
+```json
+{
+    "authenticated": true,
+    "user_id": 123,
+    "username": "admin_username",
+    "role": "Admin"
+}
+```
+
+**Error Response (Not Authenticated):**
+```json
+{
+    "detail": "Not authenticated",
+    "status_code": 401
+}
+```
+
+---
+
+## ANDROID IMPLEMENTATION
+
+### Retrofit Interface
+```kotlin
+import retrofit2.Response
+import retrofit2.http.*
+
+interface AdminAuthApiService {
+    
+    // Admin Login
+    @POST("api/admin/login")
+    suspend fun adminLogin(@Body request: LoginRequest): Response<LoginResponse>
+    
+    // User Creation
+    @FormUrlEncoded
+    @POST("api/admin/create-user")
+    suspend fun createUser(
+        @Field("username") username: String,
+        @Field("email") email: String,
+        @Field("first_name") firstName: String,
+        @Field("last_name") lastName: String,
+        @Field("password") password: String,
+        @Field("role_id") roleId: Int? = null,
+        @Field("employee_code") employeeCode: String? = null,
+        @Field("mobile") mobile: String? = null
+    ): Response<CreateUserResponse>
+    
+    // Create Admin
+    @FormUrlEncoded
+    @POST("api/admin/create-admin")
+    suspend fun createAdmin(
+        @Field("username") username: String,
+        @Field("email") email: String,
+        @Field("first_name") firstName: String,
+        @Field("last_name") lastName: String,
+        @Field("password") password: String,
+        @Field("mobile") mobile: String? = null
+    ): Response<CreateUserResponse>
+    
+    // Create Manager
+    @FormUrlEncoded
+    @POST("api/admin/create-manager")
+    suspend fun createManager(
+        @Field("username") username: String,
+        @Field("email") email: String,
+        @Field("first_name") firstName: String,
+        @Field("last_name") lastName: String,
+        @Field("password") password: String,
+        @Field("employee_code") employeeCode: String,
+        @Field("mobile") mobile: String? = null
+    ): Response<CreateUserResponse>
+    
+    // Create Employee
+    @FormUrlEncoded
+    @POST("api/admin/create-employee")
+    suspend fun createEmployee(
+        @Field("username") username: String,
+        @Field("email") email: String,
+        @Field("first_name") firstName: String,
+        @Field("last_name") lastName: String,
+        @Field("password") password: String,
+        @Field("employee_code") employeeCode: String,
+        @Field("mobile") mobile: String? = null
+    ): Response<CreateUserResponse>
+    
+    // Check Authentication
+    @GET("api/admin/check-auth")
+    suspend fun checkAuth(): Response<AuthCheckResponse>
+}
+```
+
+### Data Classes
+```kotlin
+// Authentication
+data class LoginRequest(
+    val username: String,
+    val password: String
+)
+
+data class LoginResponse(
+    val access_token: String,
+    val token_type: String
+)
+
+// User Creation
+data class CreateUserRequest(
+    val username: String,
+    val email: String,
+    val first_name: String,
+    val last_name: String,
+    val password: String,
+    val role_id: Int? = null,
+    val employee_code: String? = null,
+    val mobile: String? = null
+)
+
+data class CreateUserResponse(
+    val message: String,
+    val user_id: Int,
+    val username: String,
+    val email: String? = null,
+    val role: String? = null
+)
+
+// Authentication Check
+data class AuthCheckResponse(
+    val authenticated: Boolean,
+    val user_id: Int,
+    val username: String,
+    val role: String
+)
+
+// Error Response
+data class ErrorResponse(
+    val detail: String,
+    val status_code: Int
+)
+```
+
+### Admin Authentication ViewModel (Android)
+```kotlin
+class AdminAuthViewModel : ViewModel() {
+    
+    private val _loginResult = MutableLiveData<LoginResponse?>()
+    val loginResult: LiveData<LoginResponse?> = _loginResult
+    
+    private val _createUserResult = MutableLiveData<CreateUserResponse?>()
+    val createUserResult: LiveData<CreateUserResponse?> = _createUserResult
+    
+    private val _error = MutableLiveData<String>()
+    val error: LiveData<String> = _error
+    
+    private val _isLoading = MutableLiveData<Boolean>()
+    val isLoading: LiveData<Boolean> = _isLoading
+    
+    fun login(username: String, password: String) {
+        _isLoading.value = true
+        
+        viewModelScope.launch {
+            try {
+                val response = adminAuthApiService.adminLogin(
+                    LoginRequest(username = username, password = password)
+                )
+                
+                if (response.isSuccessful) {
+                    _loginResult.value = response.body()
+                    // Save token to SharedPreferences
+                    saveAuthToken(response.body()?.access_token)
+                } else {
+                    _error.value = response.errorBody()?.string() ?: "Login failed"
+                }
+            } catch (e: Exception) {
+                _error.value = "Network error: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+    
+    fun createUser(userData: CreateUserRequest) {
+        _isLoading.value = true
+        
+        viewModelScope.launch {
+            try {
+                val response = adminAuthApiService.createUser(
+                    username = userData.username,
+                    email = userData.email,
+                    firstName = userData.first_name,
+                    lastName = userData.last_name,
+                    password = userData.password,
+                    roleId = userData.role_id,
+                    employeeCode = userData.employee_code,
+                    mobile = userData.mobile
+                )
+                
+                if (response.isSuccessful) {
+                    _createUserResult.value = response.body()
+                } else {
+                    _error.value = response.errorBody()?.string() ?: "User creation failed"
+                }
+            } catch (e: Exception) {
+                _error.value = "Network error: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+    
+    fun createAdmin(adminData: AdminCreateRequest) {
+        _isLoading.value = true
+        
+        viewModelScope.launch {
+            try {
+                val response = adminAuthApiService.createAdmin(
+                    username = adminData.username,
+                    email = adminData.email,
+                    firstName = adminData.first_name,
+                    lastName = adminData.last_name,
+                    password = adminData.password,
+                    mobile = adminData.mobile
+                )
+                
+                if (response.isSuccessful) {
+                    _createUserResult.value = response.body()
+                } else {
+                    _error.value = response.errorBody()?.string() ?: "Admin creation failed"
+                }
+            } catch (e: Exception) {
+                _error.value = "Network error: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+    
+    fun createManager(managerData: ManagerCreateRequest) {
+        _isLoading.value = true
+        
+        viewModelScope.launch {
+            try {
+                val response = adminAuthApiService.createManager(
+                    username = managerData.username,
+                    email = managerData.email,
+                    firstName = managerData.first_name,
+                    lastName = managerData.last_name,
+                    password = managerData.password,
+                    employeeCode = managerData.employee_code,
+                    mobile = managerData.mobile
+                )
+                
+                if (response.isSuccessful) {
+                    _createUserResult.value = response.body()
+                } else {
+                    _error.value = response.errorBody()?.string() ?: "Manager creation failed"
+                }
+            } catch (e: Exception) {
+                _error.value = "Network error: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+    
+    fun createEmployee(employeeData: EmployeeCreateRequest) {
+        _isLoading.value = true
+        
+        viewModelScope.launch {
+            try {
+                val response = adminAuthApiService.createEmployee(
+                    username = employeeData.username,
+                    email = employeeData.email,
+                    firstName = employeeData.first_name,
+                    lastName = employeeData.last_name,
+                    password = employeeData.password,
+                    employeeCode = employeeData.employee_code,
+                    mobile = employeeData.mobile
+                )
+                
+                if (response.isSuccessful) {
+                    _createUserResult.value = response.body()
+                } else {
+                    _error.value = response.errorBody()?.string() ?: "Employee creation failed"
+                }
+            } catch (e: Exception) {
+                _error.value = "Network error: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+    
+    fun checkAuth() {
+        viewModelScope.launch {
+            try {
+                val response = adminAuthApiService.checkAuth()
+                if (response.isSuccessful) {
+                    // User is authenticated
+                } else {
+                    // User is not authenticated
+                    clearAuthToken()
+                }
+            } catch (e: Exception) {
+                // Handle network error
+            }
+        }
+    }
+    
+    private fun saveAuthToken(token: String?) {
+        // Save to SharedPreferences
+        val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
+        prefs.edit().putString("access_token", token).apply()
+    }
+    
+    private fun clearAuthToken() {
+        val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
+        prefs.edit().remove("access_token").apply()
+    }
+}
+```
+
+### User Creation Form (Android Activity/Fragment)
+```kotlin
+class CreateUserActivity : AppCompatActivity() {
+    
+    private lateinit var viewModel: AdminAuthViewModel
+    private lateinit var binding: ActivityCreateUserBinding
+    
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityCreateUserBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        
+        viewModel = ViewModelProvider(this)[AdminAuthViewModel::class.java]
+        
+        setupUI()
+        observeViewModel()
+    }
+    
+    private fun setupUI() {
+        binding.btnCreateUser.setOnClickListener {
+            val userData = CreateUserRequest(
+                username = binding.etUsername.text.toString(),
+                email = binding.etEmail.text.toString(),
+                first_name = binding.etFirstName.text.toString(),
+                last_name = binding.etLastName.text.toString(),
+                password = binding.etPassword.text.toString(),
+                role_id = binding.spinnerRole.selectedItemPosition + 1,
+                employee_code = binding.etEmployeeCode.text.toString(),
+                mobile = binding.etMobile.text.toString()
+            )
+            
+            viewModel.createUser(userData)
+        }
+        
+        binding.btnCreateAdmin.setOnClickListener {
+            val adminData = AdminCreateRequest(
+                username = binding.etUsername.text.toString(),
+                email = binding.etEmail.text.toString(),
+                first_name = binding.etFirstName.text.toString(),
+                last_name = binding.etLastName.text.toString(),
+                password = binding.etPassword.text.toString(),
+                mobile = binding.etMobile.text.toString()
+            )
+            
+            viewModel.createAdmin(adminData)
+        }
+    }
+    
+    private fun observeViewModel() {
+        viewModel.createUserResult.observe(this) { result ->
+            result?.let {
+                Toast.makeText(this, "User created successfully!", Toast.LENGTH_SHORT).show()
+                // Navigate back or clear form
+            }
+        }
+        
+        viewModel.error.observe(this) { error ->
+            error?.let {
+                Toast.makeText(this, "Error: $it", Toast.LENGTH_LONG).show()
+            }
+        }
+        
+        viewModel.isLoading.observe(this) { isLoading ->
+            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        }
+    }
+}
+```
+
+---
+
+## ERROR CODES
+
+| Code | Description |
+|------|-------------|
+| 200 | Success |
+| 400 | Bad Request (validation error) |
+| 401 | Unauthorized |
+| 403 | Forbidden (Admin access required) |
+| 500 | Internal Server Error |
+
+---
+
+## NOTES
+
+1. **Security**: Admin endpoints require admin role verification
+2. **Authentication**: Use Bearer token for authenticated endpoints
+3. **Form Data**: User creation uses form-urlencoded format
+4. **Role Management**: Role IDs should be obtained from the roles endpoint
+5. **Password Handling**: In production, passwords should be hashed
+6. **Token Storage**: Store JWT tokens securely on Android device
+
+---
+
+**Last Updated**: 2025-11-03
+**Base URL**: http://localhost:8001

@@ -1,0 +1,268 @@
+{% extends 'core/base.html' %}
+
+{% block page_title %}Reports & Analytics{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <!-- Report Type Cards -->
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-bar fa-2x mb-2"></i>
+                <h5>Monthly Report</h5>
+                <p>{{ current_month }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-2x mb-2"></i>
+                <h5>Employee Reports</h5>
+                <p>{{ employee_report.count }} Records</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-calendar-times fa-2x mb-2"></i>
+                <h5>Leave Reports</h5>
+                <p>{{ leave_report.count }} Types</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-desktop fa-2x mb-2"></i>
+                <h5>Device Reports</h5>
+                <p>{{ device_report.count }} Devices</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Department-wise Monthly Report -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Department-wise Attendance Report ({{ current_month }})</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th>Department</th>
+                                <th>Total Days</th>
+                                <th>Present</th>
+                                <th>Absent</th>
+                                <th>Late</th>
+                                <th>Attendance %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dept in monthly_report %}
+                            <tr>
+                                <td>{{ dept.employee__department__department_name }}</td>
+                                <td>{{ dept.total_days }}</td>
+                                <td><span class="badge bg-success">{{ dept.present_days }}</span></td>
+                                <td><span class="badge bg-danger">{{ dept.absent_days }}</span></td>
+                                <td><span class="badge bg-warning">{{ dept.late_days }}</span></td>
+                                <td>
+                                    {% if dept.total_days > 0 %}
+                                        {{ dept.attendance_percentage }}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">No data available for {{ current_month }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Employee-wise Report -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Employee-wise Attendance Report ({{ current_month }})</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Total</th>
+                                <th>Present</th>
+                                <th>Absent</th>
+                                <th>Late</th>
+                                <th>Attendance %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for emp in employee_report %}
+                            <tr>
+                                <td>{{ emp.employee__employee_code }} - {{ emp.employee__first_name }}</td>
+                                <td>{{ emp.total_days }}</td>
+                                <td><span class="badge bg-success">{{ emp.present_days }}</span></td>
+                                <td><span class="badge bg-danger">{{ emp.absent_days }}</span></td>
+                                <td><span class="badge bg-warning">{{ emp.late_days }}</span></td>
+                                <td>
+                                    {% if emp.total_days > 0 %}
+                                        {{ emp.attendance_percentage }}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">No employee attendance data</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leave Report -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Leave Applications Report ({{ current_month|slice:":4" }})</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th>Leave Type</th>
+                                <th>Total Apps</th>
+                                <th>Approved</th>
+                                <th>Pending</th>
+                                <th>Rejected</th>
+                                <th>Approval %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for leave in leave_report %}
+                            <tr>
+                                <td>{{ leave.leave_type__type_name }}</td>
+                                <td>{{ leave.total_applications }}</td>
+                                <td><span class="badge bg-success">{{ leave.approved }}</span></td>
+                                <td><span class="badge bg-warning">{{ leave.pending }}</span></td>
+                                <td><span class="badge bg-danger">{{ leave.rejected }}</span></td>
+                                <td>
+                                    {% if leave.total_applications > 0 %}
+                                        {{ leave.approval_percentage }}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">No leave applications this year</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Device Usage Report -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Device Usage Report ({{ current_month }})</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th>Device</th>
+                                <th>Total Punches</th>
+                                <th>Check-ins</th>
+                                <th>Check-outs</th>
+                                <th>Success Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for device in device_report %}
+                            <tr>
+                                <td>{{ device.device__device_name }}</td>
+                                <td>{{ device.total_punches }}</td>
+                                <td><span class="badge bg-primary">{{ device.in_punches }}</span></td>
+                                <td><span class="badge bg-secondary">{{ device.out_punches }}</span></td>
+                                <td>
+                                    {% if device.total_punches > 0 %}
+                                        100%
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">No device usage data</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Options -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Export Reports</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="{% url 'export_excel' %}" class="btn btn-primary w-100 mb-2">
+                            <i class="fas fa-file-excel"></i> Export to Excel
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'export_pdf' %}" class="btn btn-danger w-100 mb-2">
+                            <i class="fas fa-file-pdf"></i> Export to PDF
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'export_csv' %}" class="btn btn-success w-100 mb-2">
+                            <i class="fas fa-file-csv"></i> Export to CSV
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-info w-100 mb-2" onclick="window.print()">
+                            <i class="fas fa-print"></i> Print Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

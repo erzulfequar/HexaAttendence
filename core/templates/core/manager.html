@@ -1,0 +1,808 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Manager Dashboard - HexaAttendance Portal{% endblock %}
+
+{% block page_title %}Manager Dashboard{% endblock %}
+
+{% block content %}
+<!-- Welcome Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-gradient-primary text-white">
+            <div class="card-body py-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-1"><i class="fas fa-user-tie me-2"></i>Manager Dashboard</h4>
+                        <p class="mb-0 opacity-75">Manage your department's attendance and leave applications.</p>
+                    </div>
+                    <div class="text-end">
+                        <div class="h6 mb-0">{{ today|date:"l, F j, Y" }}</div>
+                        <small class="opacity-75">{{ now|time:"H:i" }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Manager Info Card -->
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-gradient-primary text-white">
+                <h6 class="mb-0"><i class="fas fa-id-card me-2"></i>Manager Information</h6>
+            </div>
+            <div class="card-body text-center">
+                <div class="avatar-circle bg-primary text-white mx-auto mb-3" style="width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;">
+                    {{ manager.first_name|first }}{{ manager.last_name|first }}
+                </div>
+                <h6 class="fw-bold">{{ manager.first_name }} {{ manager.last_name }}</h6>
+                <p class="text-muted mb-2">{{ manager.employee_code }}</p>
+                <div class="mb-2">
+                    <span class="badge bg-primary">{{ manager.department.department_name }}</span>
+                </div>
+                <p class="mb-1"><i class="fas fa-briefcase me-2 text-primary"></i>{{ manager.designation.designation_name }}</p>
+                <p class="mb-0"><i class="fas fa-envelope me-2 text-primary"></i>{{ manager.email }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Department Statistics -->
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Department Overview - {{ today|date:"F Y" }}</h6>
+                <div class="btn-group btn-group-sm" role="group">
+                    <input type="radio" class="btn-check" name="chartView" id="statsView" autocomplete="off" checked>
+                    <label class="btn btn-outline-light btn-sm" for="statsView"><i class="fas fa-th"></i></label>
+                    <input type="radio" class="btn-check" name="chartView" id="chartView" autocomplete="off">
+                    <label class="btn btn-outline-light btn-sm" for="chartView"><i class="fas fa-chart-pie"></i></label>
+                    <div class="btn-group btn-group-sm ms-2" role="group">
+                        <a href="{% url 'manager_profile' %}" class="btn btn-outline-light btn-sm" data-bs-toggle="tooltip" title="My Profile">
+                            <i class="fas fa-user"></i>
+                        </a>
+                        <a href="{% url 'manager_add_employee' %}" class="btn btn-outline-light btn-sm" data-bs-toggle="tooltip" title="Add new employee">
+                            <i class="fas fa-user-plus"></i>
+                        </a>
+                        <a href="{% url 'manager_employees' %}" class="btn btn-outline-light btn-sm" data-bs-toggle="tooltip" title="Manage employees">
+                            <i class="fas fa-users"></i>
+                        </a>
+                        <a href="{% url 'manager_tasks' %}" class="btn btn-outline-light btn-sm" data-bs-toggle="tooltip" title="Manage tasks">
+                            <i class="fas fa-tasks"></i>
+                        </a>
+                        <a href="{% url 'manager_leave' %}" class="btn btn-outline-light btn-sm" data-bs-toggle="tooltip" title="Manage leaves">
+                            <i class="fas fa-calendar-alt"></i>
+                        </a>
+                        <a href="{% url 'manager_attendance' %}" class="btn btn-outline-light btn-sm" data-bs-toggle="tooltip" title="View attendance">
+                            <i class="fas fa-clock"></i>
+                        </a>
+                        <a href="{% url 'employee_tracking' %}" class="btn btn-outline-light btn-sm" data-bs-toggle="tooltip" title="Track locations">
+                            <i class="fas fa-map-marked-alt"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Statistics Cards View -->
+                <div id="statsCards" class="row text-center">
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-light h-100 border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-center mb-2">
+                                    <i class="fas fa-users fa-2x text-primary me-2"></i>
+                                    <h3 class="text-primary mb-0">{{ total_employees }}</h3>
+                                </div>
+                                <p class="mb-0 fw-bold">Total Employees</p>
+                                <small class="text-muted">Active staff</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-success text-white h-100 border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-center mb-2">
+                                    <i class="fas fa-check-circle fa-2x me-2"></i>
+                                    <h3 class="mb-0">{{ present_today }}</h3>
+                                </div>
+                                <p class="mb-0 fw-bold">Present Today</p>
+                                <small class="opacity-75">{{ present_percentage }}% attendance</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-danger text-white h-100 border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-center mb-2">
+                                    <i class="fas fa-times-circle fa-2x me-2"></i>
+                                    <h3 class="mb-0">{{ absent_today }}</h3>
+                                </div>
+                                <p class="mb-0 fw-bold">Absent Today</p>
+                                <small class="opacity-75">{{ absent_percentage }}% absent</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-warning text-white h-100 border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-center mb-2">
+                                    <i class="fas fa-calendar-times fa-2x me-2"></i>
+                                    <h3 class="mb-0">{{ on_leave_today }}</h3>
+                                </div>
+                                <p class="mb-0 fw-bold">On Leave</p>
+                                <small class="opacity-75">Approved leaves</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart View -->
+                <div id="attendanceChart" class="d-none">
+                    <canvas id="departmentChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- Today's Attendance -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-clock me-2"></i>Today's Attendance</h6>
+                <div class="d-flex align-items-center">
+                    <input type="text" id="attendanceSearch" class="form-control form-control-sm me-2" placeholder="Search employees..." style="width: 150px;">
+                    <small class="opacity-75">{{ manager.department.department_name }}</small>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="attendanceTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th><i class="fas fa-user me-1"></i>Employee</th>
+                                <th><i class="fas fa-info-circle me-1"></i>Status</th>
+                                <th><i class="fas fa-sign-in-alt me-1"></i>In Time</th>
+                                <th><i class="fas fa-sign-out-alt me-1"></i>Out Time</th>
+                                <th><i class="fas fa-clock me-1"></i>Late By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for att in dept_attendance_today %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-circle bg-primary text-white me-2" style="width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;">
+                                            {{ att.employee.first_name|first }}{{ att.employee.last_name|first }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">{{ att.employee.first_name }} {{ att.employee.last_name }}</div>
+                                            <small class="text-muted">{{ att.employee.employee_code }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if att.status == 'present' %}
+                                        <span class="badge bg-success fs-6 px-3 py-1" data-bs-toggle="tooltip" title="Employee is present today">
+                                            <i class="fas fa-check-circle me-1"></i>Present
+                                        </span>
+                                    {% elif att.status == 'absent' %}
+                                        <span class="badge bg-danger fs-6 px-3 py-1" data-bs-toggle="tooltip" title="Employee is absent today">
+                                            <i class="fas fa-times-circle me-1"></i>Absent
+                                        </span>
+                                    {% elif att.status == 'half_day' %}
+                                        <span class="badge bg-warning fs-6 px-3 py-1" data-bs-toggle="tooltip" title="Employee worked half day">
+                                            <i class="fas fa-adjust me-1"></i>Half Day
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary fs-6 px-3 py-1">{{ att.status|title }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ att.in_time|default:"-"|time:"H:i" }}</td>
+                                <td>{{ att.out_time|default:"-"|time:"H:i" }}</td>
+                                <td>
+                                    {% if att.late_by %}
+                                        <span class="badge bg-danger" data-bs-toggle="tooltip" title="Late by {{ att.late_by }} minutes">{{ att.late_by }} min</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4">
+                                    <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                                    <h6 class="text-muted">No attendance records for today</h6>
+                                    <small class="text-muted">Attendance logs will appear here once employees check in.</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leave Applications -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Recent Leave Applications</h6>
+                <div class="d-flex align-items-center">
+                    <select id="leaveFilter" class="form-select form-select-sm me-2" style="width: 120px;">
+                        <option value="all">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                    <a href="{% url 'leave' %}" class="btn btn-light btn-sm" data-bs-toggle="tooltip" title="View all leave applications">
+                        <i class="fas fa-eye me-1"></i>View All
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="leaveTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th><i class="fas fa-user me-1"></i>Employee</th>
+                                <th><i class="fas fa-tag me-1"></i>Type</th>
+                                <th><i class="fas fa-calendar-plus me-1"></i>Start Date</th>
+                                <th><i class="fas fa-calendar-minus me-1"></i>End Date</th>
+                                <th><i class="fas fa-info-circle me-1"></i>Status</th>
+                                <th><i class="fas fa-cogs me-1"></i>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for leave in dept_leaves %}
+                            <tr class="leave-row" data-status="{{ leave.status }}">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-circle bg-primary text-white me-2" style="width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;">
+                                            {{ leave.employee.first_name|first }}{{ leave.employee.last_name|first }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">{{ leave.employee.first_name }} {{ leave.employee.last_name }}</div>
+                                            <small class="text-muted">{{ leave.employee.employee_code }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ leave.leave_type.type_name }}</td>
+                                <td>{{ leave.start_date|date:"M d, Y" }}</td>
+                                <td>{{ leave.end_date|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if leave.status == 'approved' %}
+                                        <span class="badge bg-success fs-6 px-3 py-1" data-bs-toggle="tooltip" title="Leave has been approved">
+                                            <i class="fas fa-check-circle me-1"></i>Approved
+                                        </span>
+                                    {% elif leave.status == 'rejected' %}
+                                        <span class="badge bg-danger fs-6 px-3 py-1" data-bs-toggle="tooltip" title="Leave has been rejected">
+                                            <i class="fas fa-times-circle me-1"></i>Rejected
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning fs-6 px-3 py-1" data-bs-toggle="tooltip" title="Waiting for approval">
+                                            <i class="fas fa-clock me-1"></i>Pending
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if leave.status == 'pending' %}
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-success me-1" onclick="approveLeave('{{ leave.leave_id }}')" data-bs-toggle="tooltip" title="Approve this leave application">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" onclick="rejectLeave('{{ leave.leave_id }}')" data-bs-toggle="tooltip" title="Reject this leave application">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                                    <h6 class="text-muted">No leave applications found</h6>
+                                    <small class="text-muted">Leave applications will appear here for approval.</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- Department Tasks -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-tasks me-2"></i>Department Tasks</h6>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#createTaskModal" data-bs-toggle="tooltip" title="Create new task">
+                        <i class="fas fa-plus me-1"></i>Create Task
+                    </button>
+                    <a href="{% url 'master' %}" class="btn btn-light btn-sm" data-bs-toggle="tooltip" title="Manage all tasks">
+                        <i class="fas fa-cog me-1"></i>Manage Tasks
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th><i class="fas fa-tag me-1"></i>Task Type</th>
+                                <th><i class="fas fa-user me-1"></i>Employee</th>
+                                <th><i class="fas fa-info-circle me-1"></i>Status</th>
+                                <th><i class="fas fa-calendar me-1"></i>Due Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task in dept_tasks %}
+                            <tr>
+                                <td>{{ task.task_type }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-circle bg-primary text-white me-2" style="width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold;">
+                                            {{ task.allotted_employee.first_name|first }}{{ task.allotted_employee.last_name|first }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">{{ task.allotted_employee.first_name }} {{ task.allotted_employee.last_name }}</div>
+                                            <small class="text-muted">{{ task.allotted_employee.employee_code }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if task.status == 'completed' %}
+                                        <span class="badge bg-success fs-6 px-2 py-1" data-bs-toggle="tooltip" title="Task has been completed">
+                                            <i class="fas fa-check-circle me-1"></i>Completed
+                                        </span>
+                                    {% elif task.status == 'in_progress' %}
+                                        <span class="badge bg-warning fs-6 px-2 py-1" data-bs-toggle="tooltip" title="Task is in progress">
+                                            <i class="fas fa-clock me-1"></i>In Progress
+                                        </span>
+                                    {% elif task.status == 'cancelled' %}
+                                        <span class="badge bg-danger fs-6 px-2 py-1" data-bs-toggle="tooltip" title="Task has been cancelled">
+                                            <i class="fas fa-times-circle me-1"></i>Cancelled
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary fs-6 px-2 py-1" data-bs-toggle="tooltip" title="Task is pending">
+                                            <i class="fas fa-pause-circle me-1"></i>Pending
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ task.due_date|default:"No due date"|date:"M d, Y" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4">
+                                    <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+                                    <h6 class="text-muted">No tasks assigned</h6>
+                                    <small class="text-muted">Tasks will appear here once they are assigned to department employees.</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Department Employees -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-users me-2"></i>Department Employees</h6>
+                <div class="d-flex align-items-center">
+                    <input type="text" id="employeeSearch" class="form-control form-control-sm me-2" placeholder="Search employees..." style="width: 200px;">
+                    <select id="statusFilter" class="form-select form-select-sm me-2" style="width: 120px;">
+                        <option value="all">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                    <span class="badge bg-light text-dark">{{ dept_employees|length }} employees</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="employeeTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th><i class="fas fa-id-badge me-1"></i>Employee Code</th>
+                                <th><i class="fas fa-user me-1"></i>Name</th>
+                                <th><i class="fas fa-briefcase me-1"></i>Designation</th>
+                                <th><i class="fas fa-envelope me-1"></i>Email</th>
+                                <th><i class="fas fa-circle me-1"></i>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for emp in dept_employees %}
+                            <tr class="employee-row" data-status="{% if emp.status %}active{% else %}inactive{% endif %}">
+                                <td>
+                                    <span class="badge bg-primary">{{ emp.employee_code }}</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-circle bg-primary text-white me-2" style="width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold;">
+                                            {{ emp.first_name|first }}{{ emp.last_name|first }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">{{ emp.first_name }} {{ emp.last_name }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ emp.designation.designation_name }}</td>
+                                <td>{{ emp.email }}</td>
+                                <td>
+                                    {% if emp.status %}
+                                        <span class="badge bg-success fs-6 px-3 py-1" data-bs-toggle="tooltip" title="Employee is currently active">
+                                            <i class="fas fa-check-circle me-1"></i>Active
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary fs-6 px-3 py-1" data-bs-toggle="tooltip" title="Employee is currently inactive">
+                                            <i class="fas fa-pause-circle me-1"></i>Inactive
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4">
+                                    <i class="fas fa-users-slash fa-3x text-muted mb-3"></i>
+                                    <h6 class="text-muted">No employees found in this department</h6>
+                                    <small class="text-muted">Employees will appear here once they are assigned to your department.</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Toggle between stats and chart view
+document.querySelectorAll('input[name="chartView"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        const statsCards = document.getElementById('statsCards');
+        const chartView = document.getElementById('attendanceChart');
+
+        if (this.id === 'chartView') {
+            statsCards.classList.add('d-none');
+            chartView.classList.remove('d-none');
+            renderChart();
+        } else {
+            statsCards.classList.remove('d-none');
+            chartView.classList.add('d-none');
+        }
+    });
+});
+
+// Render attendance chart
+function renderChart() {
+    const ctx = document.getElementById('departmentChart').getContext('2d');
+    const data = {
+        labels: ['Present', 'Absent', 'On Leave'],
+        datasets: [{
+            data: [parseInt('{{ present_today|default:0 }}'), parseInt('{{ absent_today|default:0 }}'), parseInt('{{ on_leave_today|default:0 }}')],
+            backgroundColor: [
+                '#28a745',
+                '#dc3545',
+                '#ffc107'
+            ],
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    };
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: data,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((context.parsed / total) * 100).toFixed(1);
+                            return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Enhanced leave approval with modal
+function approveLeave(leaveId) {
+    const modal = createModal('Approve Leave', 'Are you sure you want to approve this leave application?', 'approve', leaveId);
+    document.body.appendChild(modal);
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+}
+
+function rejectLeave(leaveId) {
+    const modal = createModal('Reject Leave', 'Are you sure you want to reject this leave application?', 'reject', leaveId);
+    document.body.appendChild(modal);
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+}
+
+function createModal(title, message, action, leaveId) {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">${title}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>${message}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-${action === 'approve' ? 'success' : 'danger'}" onclick="confirmAction('${action}', ${leaveId})">${title}</button>
+                </div>
+            </div>
+        </div>
+    `;
+    return modal;
+}
+
+function confirmAction(action, leaveId) {
+    // Here you would make an AJAX call to your backend
+    alert(`Leave ${action}d! (AJAX call would be implemented here)`);
+    // Close modal
+    bootstrap.Modal.getInstance(document.querySelector('.modal')).hide();
+    // Refresh the page or update the table
+    location.reload();
+}
+
+// Add tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Search functionality for attendance table
+    document.getElementById('attendanceSearch').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#attendanceTable tbody tr');
+
+        rows.forEach(row => {
+            if (row.cells.length > 1) { // Skip empty state row
+                const employeeName = row.cells[0].textContent.toLowerCase();
+                const employeeCode = row.cells[0].textContent.toLowerCase();
+                const isVisible = employeeName.includes(searchTerm) || employeeCode.includes(searchTerm);
+                row.style.display = isVisible ? '' : 'none';
+            }
+        });
+    });
+
+    // Filter functionality for leave table
+    document.getElementById('leaveFilter').addEventListener('change', function() {
+        const filterValue = this.value;
+        const rows = document.querySelectorAll('#leaveTable .leave-row');
+
+        rows.forEach(row => {
+            const status = row.getAttribute('data-status');
+            const isVisible = filterValue === 'all' || status === filterValue;
+            row.style.display = isVisible ? '' : 'none';
+        });
+    });
+
+    // Search and filter functionality for employee table
+    const employeeSearch = document.getElementById('employeeSearch');
+    const statusFilter = document.getElementById('statusFilter');
+
+    function filterEmployees() {
+        const searchTerm = employeeSearch.value.toLowerCase();
+        const statusValue = statusFilter.value;
+        const rows = document.querySelectorAll('#employeeTable .employee-row');
+
+        rows.forEach(row => {
+            const employeeName = row.cells[1].textContent.toLowerCase();
+            const employeeCode = row.cells[0].textContent.toLowerCase();
+            const status = row.getAttribute('data-status');
+
+            const matchesSearch = employeeName.includes(searchTerm) || employeeCode.includes(searchTerm);
+            const matchesStatus = statusValue === 'all' || status === statusValue;
+
+            row.style.display = (matchesSearch && matchesStatus) ? '' : 'none';
+        });
+    }
+
+    employeeSearch.addEventListener('input', filterEmployees);
+    statusFilter.addEventListener('change', filterEmployees);
+});
+</script>
+
+<!-- Create Task Modal -->
+<div class="modal fade" id="createTaskModal" tabindex="-1" aria-labelledby="createTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-gradient-primary text-white">
+                <h5 class="modal-title" id="createTaskModalLabel"><i class="fas fa-plus me-2"></i>Create New Task</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="createTaskForm" method="post" action="{% url 'create_task' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_task_type" class="form-label">Task Type <span class="text-danger">*</span></label>
+                                <select name="task_type" class="form-select" id="id_task_type" required>
+                                    <option value="">Select Task Type</option>
+                                    <option value="Field Visit">Field Visit</option>
+                                    <option value="Meeting">Meeting</option>
+                                    <option value="Training">Training</option>
+                                    <option value="Audit">Audit</option>
+                                    <option value="Maintenance">Maintenance</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_allotted_employee" class="form-label">Allotted Employee <span class="text-danger">*</span></label>
+                                <select name="allotted_employee" class="form-select" id="id_allotted_employee" required>
+                                    <option value="">Select Employee</option>
+                                    {% for emp in dept_employees %}
+                                    <option value="{{ emp.employee_id }}">{{ emp.first_name }} {{ emp.last_name }} ({{ emp.employee_code }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_task_description" class="form-label">Task Description <span class="text-danger">*</span></label>
+                        <textarea name="task_description" class="form-control" id="id_task_description" rows="3" placeholder="Describe the task details..." required></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_visiting_company_name" class="form-label">Visiting Company Name</label>
+                                <input type="text" name="visiting_company_name" class="form-control" id="id_visiting_company_name" placeholder="Company name (if applicable)">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_company_location" class="form-label">Company Location</label>
+                                <input type="text" name="company_location" class="form-control" id="id_company_location" placeholder="Location address">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_due_date" class="form-label">Due Date</label>
+                        <input type="date" name="due_date" class="form-control" id="id_due_date" min="{{ today|date:'Y-m-d' }}">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Create Task
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Handle form submission with AJAX
+document.getElementById('createTaskForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+
+    // Show loading state
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Creating...';
+
+    fetch('{% url "create_task" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            showToast('Task created successfully!', 'success');
+
+            // Close modal and reset form
+            const modal = bootstrap.Modal.getInstance(document.getElementById('createTaskModal'));
+            modal.hide();
+
+            // Refresh the page to show new task
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            // Show error messages
+            if (data.errors) {
+                let errorMessage = 'Please fix the following errors:\n';
+                for (let field in data.errors) {
+                    errorMessage += `- ${field}: ${data.errors[field].join(', ')}\n`;
+                }
+                showToast(errorMessage, 'error');
+            } else {
+                showToast('Failed to create task. Please try again.', 'error');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('An error occurred. Please try again.', 'error');
+    })
+    .finally(() => {
+        // Reset button state
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
+});
+
+// Reset form when modal is closed
+document.getElementById('createTaskModal').addEventListener('hidden.bs.modal', function() {
+    document.getElementById('createTaskForm').reset();
+});
+
+// Toast notification function
+function showToast(message, type = 'info') {
+    const toastContainer = document.querySelector('.toast-container') || createToastContainer();
+
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+
+    toastContainer.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+
+    // Auto remove after shown
+    toast.addEventListener('hidden.bs.toast', () => {
+        toast.remove();
+    });
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.className = 'toast-container position-fixed top-0 end-0 p-3';
+    container.style.zIndex = '9999';
+    document.body.appendChild(container);
+    return container;
+}
+</script>
+{% endblock %}

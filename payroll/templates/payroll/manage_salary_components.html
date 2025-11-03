@@ -1,0 +1,141 @@
+{% extends 'core/base.html' %}
+
+{% block page_title %}Manage Salary Components{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-cogs"></i> Salary Components for {{ salary.employee.employee_code }} - {{ salary.employee.first_name }} {{ salary.employee.last_name }}</h5>
+                <a href="{% url 'employee_salaries' %}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> Back to Salaries
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Basic Salary: ₹{{ salary.basic_salary|floatformat:2 }}</h6>
+                        <h6>Effective Date: {{ salary.effective_date|date:"d M Y" }}</h6>
+                    </div>
+                    <div class="col-md-6">
+                        <form method="post" class="border p-3 rounded">
+                            {% csrf_token %}
+                            <h6>Add Salary Component</h6>
+                            <div class="form-group">
+                                <label for="{{ form.component.id_for_label }}">Component</label>
+                                {{ form.component }}
+                                {% if form.component.errors %}
+                                    <div class="text-danger">{{ form.component.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.amount.id_for_label }}">Amount</label>
+                                        {{ form.amount }}
+                                        {% if form.amount.errors %}
+                                            <div class="text-danger">{{ form.amount.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        {{ form.is_percentage }}
+                                        <label class="form-check-label" for="{{ form.is_percentage.id_for_label }}">
+                                            Is Percentage
+                                        </label>
+                                    </div>
+                                    <div class="form-group" id="percentage_field" style="display: none;">
+                                        <label for="{{ form.percentage_of_basic.id_for_label }}">Percentage of Basic (%)</label>
+                                        {{ form.percentage_of_basic }}
+                                        {% if form.percentage_of_basic.errors %}
+                                            <div class="text-danger">{{ form.percentage_of_basic.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus"></i> Add Component
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <hr>
+
+                <h6>Current Salary Components</h6>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Component Name</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Calculated Value</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for component_value in component_values %}
+                            <tr>
+                                <td>{{ component_value.component.component_name }}</td>
+                                <td>
+                                    <span class="badge bg-{% if component_value.component.component_type == 'earning' %}success{% else %}danger{% endif %}">
+                                        {{ component_value.component.get_component_type_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if component_value.is_percentage %}
+                                        {{ component_value.percentage_of_basic }}%
+                                    {% else %}
+                                        ₹{{ component_value.amount|floatformat:2 }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if component_value.is_percentage %}
+                                        ₹{{ component_value.calculated_amount|floatformat:2 }}
+                                    {% else %}
+                                        ₹{{ component_value.amount|floatformat:2 }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <form method="post" action="{% url 'delete_salary_component_value' component_value.value_id %}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this component?')">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">No salary components assigned.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const isPercentageCheckbox = document.getElementById('{{ form.is_percentage.id_for_label }}');
+    const percentageField = document.getElementById('percentage_field');
+
+    function togglePercentageField() {
+        if (isPercentageCheckbox.checked) {
+            percentageField.style.display = 'block';
+        } else {
+            percentageField.style.display = 'none';
+        }
+    }
+
+    isPercentageCheckbox.addEventListener('change', togglePercentageField);
+    togglePercentageField(); // Initial check
+});
+</script>
+{% endblock %}

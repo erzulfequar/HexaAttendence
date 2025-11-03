@@ -1,0 +1,336 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Employee Location Tracking - HexaAttendance Portal{% endblock %}
+
+{% block page_title %}Employee Location Tracking{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-gradient-primary text-white">
+            <div class="card-body py-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-1"><i class="fas fa-map-marked-alt me-2"></i>Employee Location Tracking</h4>
+                        <p class="mb-0 opacity-75">Track employee locations in real-time using GPS coordinates from attendance logs.</p>
+                    </div>
+                    <div class="text-end">
+                        <div class="h6 mb-0">{{ today|date:"l, F j, Y" }}</div>
+                        <small class="opacity-75">{{ total_locations }} locations tracked</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Map Container -->
+    <div class="col-lg-8 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-map me-2"></i>Live Location Map</h6>
+                <div class="d-flex align-items-center">
+                    <span class="badge bg-light text-dark me-2">{{ dept_employees|length }} employees</span>
+                    <button class="btn btn-light btn-sm" onclick="refreshMap()" data-bs-toggle="tooltip" title="Refresh map data">
+                        <i class="fas fa-sync-alt me-1"></i>Refresh
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div id="map" style="height: 600px; width: 100%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Employee List and Controls -->
+    <div class="col-lg-4">
+        <!-- Quick Stats -->
+        <div class="card mb-4">
+            <div class="card-header bg-gradient-success text-white">
+                <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Tracking Statistics</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="mb-3">
+                            <i class="fas fa-users fa-2x text-success mb-2"></i>
+                            <h4 class="text-success mb-0">{{ dept_employees|length }}</h4>
+                            <small class="text-muted">Total Employees</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mb-3">
+                            <i class="fas fa-map-marker-alt fa-2x text-primary mb-2"></i>
+                            <h4 class="text-primary mb-0">{{ total_locations }}</h4>
+                            <small class="text-muted">Locations Tracked</small>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="small text-muted">
+                    <i class="fas fa-clock me-1"></i>Last 24 hours data<br>
+                    <i class="fas fa-info-circle me-1"></i>Locations from attendance punches
+                </div>
+            </div>
+        </div>
+
+        <!-- Employee Filter -->
+        <div class="card mb-4">
+            <div class="card-header bg-gradient-warning text-white">
+                <h6 class="mb-0"><i class="fas fa-filter me-2"></i>Filter Employees</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="employeeFilter" class="form-label">Select Employee</label>
+                    <select id="employeeFilter" class="form-select form-select-sm">
+                        <option value="all">All Employees</option>
+                        {% for emp in dept_employees %}
+                        <option value="{{ emp.employee_code }}">{{ emp.first_name }} {{ emp.last_name }} ({{ emp.employee_code }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="timeFilter" class="form-label">Time Range</label>
+                    <select id="timeFilter" class="form-select form-select-sm">
+                        <option value="24h">Last 24 Hours</option>
+                        <option value="12h">Last 12 Hours</option>
+                        <option value="6h">Last 6 Hours</option>
+                        <option value="1h">Last Hour</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary btn-sm w-100" onclick="applyFilters()">
+                    <i class="fas fa-search me-1"></i>Apply Filters
+                </button>
+            </div>
+        </div>
+
+        <!-- Recent Locations -->
+        <div class="card">
+            <div class="card-header bg-gradient-info text-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-history me-2"></i>Recent Locations</h6>
+                <small class="opacity-75">{{ location_data|length }} entries</small>
+            </div>
+            <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                {% for location in location_data %}
+                <div class="location-entry mb-3 p-2 border rounded" data-employee="{{ location.employee_code }}">
+                    <div class="d-flex align-items-start">
+                        <div class="avatar-circle bg-primary text-white me-2 flex-shrink-0" style="width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;">
+                            {{ location.employee_name|slice:":1" }}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold small">{{ location.employee_name }}</div>
+                            <div class="small text-muted">
+                                <i class="fas fa-clock me-1"></i>{{ location.punch_time }}<br>
+                                <i class="fas fa-sign-{{ location.punch_type|lower }}-alt me-1"></i>{{ location.punch_type }} at {{ location.latitude|floatformat:4 }}, {{ location.longitude|floatformat:4 }}
+                            </div>
+                            {% if location.selfie_url %}
+                            <div class="mt-1">
+                                <img src="{{ location.selfie_url }}" alt="Selfie" class="img-thumbnail" style="width: 40px; height: 40px; object-fit: cover; cursor: pointer;" onclick="showImageModal('{{ location.selfie_url }}', '{{ location.employee_name }} - {{ location.punch_time }}')">
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-4">
+                    <i class="fas fa-map-marker-slash fa-3x text-muted mb-3"></i>
+                    <h6 class="text-muted">No location data available</h6>
+                    <small class="text-muted">Location data will appear here when employees check in/out with GPS enabled.</small>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalLabel">Employee Selfie</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" alt="Employee Selfie" class="img-fluid rounded">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<script>
+let map;
+let markers = [];
+let allLocationData = {{ location_data|safe }};
+
+// Initialize map
+function initMap() {
+    // Default center (can be changed based on company location)
+    const defaultLat = 20.5937; // India's center latitude
+    const defaultLng = 78.9629; // India's center longitude
+
+    map = L.map('map').setView([defaultLat, defaultLng], 5);
+
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19,
+    }).addTo(map);
+
+    // Add markers for all locations
+    updateMarkers(allLocationData);
+}
+
+// Update markers on map
+function updateMarkers(locationData) {
+    // Clear existing markers
+    markers.forEach(marker => map.removeLayer(marker));
+    markers = [];
+
+    if (locationData.length === 0) {
+        // If no data, show a message
+        return;
+    }
+
+    // Create markers
+    locationData.forEach(location => {
+        const marker = L.marker([location.latitude, location.longitude])
+            .addTo(map)
+            .bindPopup(`
+                <div class="text-center">
+                    <strong>${location.employee_name}</strong><br>
+                    <small class="text-muted">${location.employee_code}</small><br>
+                    <span class="badge bg-${location.punch_type === 'IN' ? 'success' : 'danger'}">${location.punch_type}</span><br>
+                    <small>${location.punch_time}</small>
+                    ${location.selfie_url ? `<br><img src="${location.selfie_url}" alt="Selfie" class="img-thumbnail mt-2" style="width: 60px; height: 60px; object-fit: cover;">` : ''}
+                </div>
+            `);
+
+        markers.push(marker);
+    });
+
+    // Fit map to show all markers
+    if (markers.length > 0) {
+        const group = new L.featureGroup(markers);
+        map.fitBounds(group.getBounds().pad(0.1));
+    }
+}
+
+// Apply filters
+function applyFilters() {
+    const employeeFilter = document.getElementById('employeeFilter').value;
+    const timeFilter = document.getElementById('timeFilter').value;
+
+    let filteredData = [...allLocationData];
+
+    // Filter by employee
+    if (employeeFilter !== 'all') {
+        filteredData = filteredData.filter(location => location.employee_code === employeeFilter);
+    }
+
+    // Filter by time (this is a simple client-side filter, in production you'd filter server-side)
+    if (timeFilter !== '24h') {
+        const hours = parseInt(timeFilter.replace('h', ''));
+        const cutoffTime = new Date();
+        cutoffTime.setHours(cutoffTime.getHours() - hours);
+
+        filteredData = filteredData.filter(location => {
+            const locationTime = new Date(location.punch_time);
+            return locationTime >= cutoffTime;
+        });
+    }
+
+    // Update markers
+    updateMarkers(filteredData);
+
+    // Update location list visibility
+    const locationEntries = document.querySelectorAll('.location-entry');
+    locationEntries.forEach(entry => {
+        const employeeCode = entry.getAttribute('data-employee');
+        if (employeeFilter === 'all' || employeeCode === employeeFilter) {
+            entry.style.display = 'block';
+        } else {
+            entry.style.display = 'none';
+        }
+    });
+}
+
+// Refresh map data
+function refreshMap() {
+    // In a real application, this would fetch fresh data from the server
+    // For now, just re-apply current filters
+    applyFilters();
+
+    // Show loading indicator
+    const refreshBtn = event.target.closest('button');
+    const originalHtml = refreshBtn.innerHTML;
+    refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Refreshing...';
+    refreshBtn.disabled = true;
+
+    setTimeout(() => {
+        refreshBtn.innerHTML = originalHtml;
+        refreshBtn.disabled = false;
+    }, 1000);
+}
+
+// Show image modal
+function showImageModal(imageSrc, title) {
+    document.getElementById('modalImage').src = imageSrc;
+    document.getElementById('imageModalLabel').textContent = title;
+    const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+    modal.show();
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initMap();
+
+    // Add tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Apply initial filters
+    applyFilters();
+});
+
+// Handle window resize
+window.addEventListener('resize', function() {
+    if (map) {
+        map.invalidateSize();
+    }
+});
+</script>
+
+<style>
+.location-entry:hover {
+    background-color: #f8f9fa;
+    transition: background-color 0.2s;
+}
+
+.avatar-circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+/* Custom marker styles if needed */
+.leaflet-popup-content-wrapper {
+    border-radius: 8px;
+}
+
+.leaflet-popup-content {
+    margin: 10px;
+}
+</style>
+{% endblock %}

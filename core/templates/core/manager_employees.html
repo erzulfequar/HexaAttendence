@@ -1,0 +1,255 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Department Employees - HexaAttendance Portal{% endblock %}
+
+{% block page_title %}Department Employees{% endblock %}
+
+{% block content %}
+<!-- Welcome Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-gradient-primary text-white">
+            <div class="card-body py-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-1"><i class="fas fa-users me-2"></i>Department Employees</h4>
+                        <p class="mb-0 opacity-75">Manage and view your department's employee information.</p>
+                    </div>
+                    <div class="text-end">
+                        <div class="h6 mb-0">{{ today|date:"l, F j, Y" }}</div>
+                        <small class="opacity-75">{{ now|time:"H:i" }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Manager Info Card -->
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-gradient-primary text-white">
+                <h6 class="mb-0"><i class="fas fa-id-card me-2"></i>Manager Information</h6>
+            </div>
+            <div class="card-body text-center">
+                <div class="avatar-circle bg-primary text-white mx-auto mb-3" style="width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;">
+                    {{ manager.first_name|first }}{{ manager.last_name|first }}
+                </div>
+                <h6 class="fw-bold">{{ manager.first_name }} {{ manager.last_name }}</h6>
+                <p class="text-muted mb-2">{{ manager.employee_code }}</p>
+                <div class="mb-2">
+                    <span class="badge bg-primary">{{ manager.department.department_name }}</span>
+                </div>
+                <p class="mb-1"><i class="fas fa-briefcase me-2 text-primary"></i>{{ manager.designation.designation_name }}</p>
+                <p class="mb-0"><i class="fas fa-envelope me-2 text-primary"></i>{{ manager.email }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Department Statistics -->
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Department Overview</h6>
+                <div class="btn-group btn-group-sm" role="group">
+                    <a href="{% url 'manager' %}" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                    </a>
+                    <a href="{% url 'manager_add_employee' %}" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-user-plus me-1"></i>Add Employee
+                    </a>
+                    <a href="{% url 'manager_attendance' %}" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-clock me-1"></i>Attendance
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-light h-100 border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-center mb-2">
+                                    <i class="fas fa-users fa-2x text-primary me-2"></i>
+                                    <h3 class="text-primary mb-0">{{ dept_employees|length }}</h3>
+                                </div>
+                                <p class="mb-0 fw-bold">Total Employees</p>
+                                <small class="text-muted">In department</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-success text-white h-100 border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-center mb-2">
+                                    <i class="fas fa-check-circle fa-2x me-2"></i>
+                                    <h3 class="mb-0">{{ active_count }}</h3>
+                                </div>
+                                <p class="mb-0 fw-bold">Active</p>
+                                <small class="opacity-75">Currently working</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-warning text-white h-100 border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-center mb-2">
+                                    <i class="fas fa-pause-circle fa-2x me-2"></i>
+                                    <h3 class="mb-0">{{ inactive_count|default:0 }}</h3>
+                                </div>
+                                <p class="mb-0 fw-bold">Inactive</p>
+                                <small class="opacity-75">On leave/inactive</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-info text-white h-100 border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-center mb-2">
+                                    <i class="fas fa-tasks fa-2x me-2"></i>
+                                    <h3 class="mb-0">{{ task_count|default:0 }}</h3>
+                                </div>
+                                <p class="mb-0 fw-bold">Tasks</p>
+                                <small class="opacity-75">Assigned this month</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- Employees List -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-users me-2"></i>Employee Directory</h6>
+                <div class="d-flex align-items-center">
+                    <input type="text" id="employeeSearch" class="form-control form-control-sm me-2" placeholder="Search employees..." style="width: 200px;">
+                    <select id="statusFilter" class="form-select form-select-sm me-2" style="width: 120px;">
+                        <option value="all">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                    <span class="badge bg-light text-dark">{{ dept_employees|length }} employees</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="employeeTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th><i class="fas fa-id-badge me-1"></i>Employee Code</th>
+                                <th><i class="fas fa-user me-1"></i>Name</th>
+                                <th><i class="fas fa-briefcase me-1"></i>Designation</th>
+                                <th><i class="fas fa-envelope me-1"></i>Email</th>
+                                <th><i class="fas fa-phone me-1"></i>Mobile</th>
+                                <th><i class="fas fa-calendar me-1"></i>Joining Date</th>
+                                <th><i class="fas fa-circle me-1"></i>Status</th>
+                                <th><i class="fas fa-cogs me-1"></i>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for emp in dept_employees %}
+                            <tr class="employee-row" data-status="{% if emp.status %}active{% else %}inactive{% endif %}">
+                                <td>
+                                    <span class="badge bg-primary">{{ emp.employee_code }}</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if emp.profile_picture %}
+                                            <img src="{{ emp.profile_picture.url }}" alt="Profile" class="rounded-circle me-2" style="width: 35px; height: 35px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="avatar-circle bg-primary text-white me-2" style="width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold;">
+                                                {{ emp.first_name|first }}{{ emp.last_name|first }}
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <div class="fw-bold">{{ emp.first_name }} {{ emp.last_name }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ emp.designation.designation_name }}</td>
+                                <td>{{ emp.email }}</td>
+                                <td>{{ emp.mobile|default:"-" }}</td>
+                                <td>{{ emp.date_of_joining|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if emp.status %}
+                                        <span class="badge bg-success fs-6 px-3 py-1" data-bs-toggle="tooltip" title="Employee is currently active">
+                                            <i class="fas fa-check-circle me-1"></i>Active
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary fs-6 px-3 py-1" data-bs-toggle="tooltip" title="Employee is currently inactive">
+                                            <i class="fas fa-pause-circle me-1"></i>Inactive
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewEmployeeDetails('{{ emp.employee_id }}')" data-bs-toggle="tooltip" title="View employee details">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <a href="{% url 'manager_attendance' %}?employee={{ emp.employee_id }}" class="btn btn-sm btn-outline-info" data-bs-toggle="tooltip" title="View attendance">
+                                            <i class="fas fa-clock"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center py-4">
+                                    <i class="fas fa-users-slash fa-3x text-muted mb-3"></i>
+                                    <h6 class="text-muted">No employees found in this department</h6>
+                                    <small class="text-muted">Employees will appear here once they are assigned to your department.</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Add tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Search and filter functionality for employee table
+    const employeeSearch = document.getElementById('employeeSearch');
+    const statusFilter = document.getElementById('statusFilter');
+
+    function filterEmployees() {
+        const searchTerm = employeeSearch.value.toLowerCase();
+        const statusValue = statusFilter.value;
+        const rows = document.querySelectorAll('#employeeTable .employee-row');
+
+        rows.forEach(row => {
+            const employeeName = row.cells[1].textContent.toLowerCase();
+            const employeeCode = row.cells[0].textContent.toLowerCase();
+            const status = row.getAttribute('data-status');
+
+            const matchesSearch = employeeName.includes(searchTerm) || employeeCode.includes(searchTerm);
+            const matchesStatus = statusValue === 'all' || status === statusValue;
+
+            row.style.display = (matchesSearch && matchesStatus) ? '' : 'none';
+        });
+    }
+
+    employeeSearch.addEventListener('input', filterEmployees);
+    statusFilter.addEventListener('change', filterEmployees);
+});
+
+function viewEmployeeDetails(employeeId) {
+    // This would open a modal or redirect to employee details page
+    alert('Employee details view for ID: ' + employeeId + ' (Feature to be implemented)');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,343 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Department Attendance - HexaAttendance Portal{% endblock %}
+
+{% block page_title %}Department Attendance{% endblock %}
+
+{% block content %}
+<!-- Welcome Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-gradient-primary text-white">
+            <div class="card-body py-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-1"><i class="fas fa-clock me-2"></i>Department Attendance</h4>
+                        <p class="mb-0 opacity-75">Monitor and manage attendance records for your team.</p>
+                    </div>
+                    <div class="text-end">
+                        <div class="h6 mb-0">{{ selected_date|date:"l, F j, Y" }}</div>
+                        <small class="opacity-75">{{ now|time:"H:i" }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Manager Info Card -->
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-gradient-primary text-white">
+                <h6 class="mb-0"><i class="fas fa-id-card me-2"></i>Manager Information</h6>
+            </div>
+            <div class="card-body text-center">
+                <div class="avatar-circle bg-primary text-white mx-auto mb-3" style="width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;">
+                    {{ manager.first_name|first }}{{ manager.last_name|first }}
+                </div>
+                <h6 class="fw-bold">{{ manager.first_name }} {{ manager.last_name }}</h6>
+                <p class="text-muted mb-2">{{ manager.employee_code }}</p>
+                <div class="mb-2">
+                    <span class="badge bg-primary">{{ manager.department.department_name }}</span>
+                </div>
+                <p class="mb-1"><i class="fas fa-briefcase me-2 text-primary"></i>{{ manager.designation.designation_name }}</p>
+                <p class="mb-0"><i class="fas fa-envelope me-2 text-primary"></i>{{ manager.email }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Statistics -->
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Attendance Summary - {{ selected_date|date:"F j, Y" }}</h6>
+                <div class="btn-group btn-group-sm" role="group">
+                    <a href="{% url 'manager' %}" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                    </a>
+                    <a href="{% url 'employee_tracking' %}" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-map-marked-alt me-1"></i>Tracking
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Date Selector -->
+                <div class="mb-3">
+                    <form method="get" class="d-flex align-items-center">
+                        <label for="date" class="form-label me-2 mb-0 fw-bold">Select Date:</label>
+                        <input type="date" name="date" id="date" class="form-control form-control-sm me-2" style="width: 150px;" value="{{ selected_date|date:'Y-m-d' }}" max="{{ today|date:'Y-m-d' }}">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="fas fa-search me-1"></i>View
+                        </button>
+                    </form>
+                </div>
+
+                <div class="row text-center">
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-light h-100 border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-center mb-2">
+                                    <i class="fas fa-users fa-2x text-primary me-2"></i>
+                                    <h3 class="text-primary mb-0">{{ total_employees }}</h3>
+                                </div>
+                                <p class="mb-0 fw-bold">Total Employees</p>
+                                <small class="text-muted">In department</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-success text-white h-100 border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-center mb-2">
+                                    <i class="fas fa-check-circle fa-2x me-2"></i>
+                                    <h3 class="mb-0">{{ present_count }}</h3>
+                                </div>
+                                <p class="mb-0 fw-bold">Present</p>
+                                <small class="opacity-75">{{ present_percentage|default:0 }}% attendance</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-danger text-white h-100 border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-center mb-2">
+                                    <i class="fas fa-times-circle fa-2x me-2"></i>
+                                    <h3 class="mb-0">{{ absent_count }}</h3>
+                                </div>
+                                <p class="mb-0 fw-bold">Absent</p>
+                                <small class="opacity-75">{{ absent_percentage|default:0 }}% absent</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-warning text-white h-100 border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-center mb-2">
+                                    <i class="fas fa-calendar-times fa-2x me-2"></i>
+                                    <h3 class="mb-0">{{ on_leave_count }}</h3>
+                                </div>
+                                <p class="mb-0 fw-bold">On Leave</p>
+                                <small class="opacity-75">Approved leaves</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- Attendance Summary -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-clock me-2"></i>Attendance Summary</h6>
+                <div class="d-flex align-items-center">
+                    <input type="text" id="attendanceSearch" class="form-control form-control-sm me-2" placeholder="Search employees..." style="width: 150px;">
+                    <small class="opacity-75">{{ manager.department.department_name }}</small>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="attendanceTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th><i class="fas fa-user me-1"></i>Employee</th>
+                                <th><i class="fas fa-info-circle me-1"></i>Status</th>
+                                <th><i class="fas fa-sign-in-alt me-1"></i>In Time</th>
+                                <th><i class="fas fa-sign-out-alt me-1"></i>Out Time</th>
+                                <th><i class="fas fa-clock me-1"></i>Late By</th>
+                                <th><i class="fas fa-clock me-1"></i>Hours</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for att in attendance_summaries %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-circle bg-primary text-white me-2" style="width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;">
+                                            {{ att.employee.first_name|first }}{{ att.employee.last_name|first }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">{{ att.employee.first_name }} {{ att.employee.last_name }}</div>
+                                            <small class="text-muted">{{ att.employee.employee_code }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if att.status == 'present' %}
+                                        <span class="badge bg-success fs-6 px-3 py-1" data-bs-toggle="tooltip" title="Employee is present today">
+                                            <i class="fas fa-check-circle me-1"></i>Present
+                                        </span>
+                                    {% elif att.status == 'absent' %}
+                                        <span class="badge bg-danger fs-6 px-3 py-1" data-bs-toggle="tooltip" title="Employee is absent today">
+                                            <i class="fas fa-times-circle me-1"></i>Absent
+                                        </span>
+                                    {% elif att.status == 'half_day' %}
+                                        <span class="badge bg-warning fs-6 px-3 py-1" data-bs-toggle="tooltip" title="Employee worked half day">
+                                            <i class="fas fa-adjust me-1"></i>Half Day
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary fs-6 px-3 py-1">{{ att.status|title }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ att.in_time|default:"-"|time:"H:i" }}</td>
+                                <td>{{ att.out_time|default:"-"|time:"H:i" }}</td>
+                                <td>
+                                    {% if att.late_by %}
+                                        <span class="badge bg-danger" data-bs-toggle="tooltip" title="Late by {{ att.late_by }} minutes">{{ att.late_by }} min</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if att.total_hours %}
+                                        <span class="badge bg-info">{{ att.total_hours }}h</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                                    <h6 class="text-muted">No attendance records for selected date</h6>
+                                    <small class="text-muted">Attendance records will appear here once employees check in/out.</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Punch Logs -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-history me-2"></i>Punch Logs</h6>
+                <div class="d-flex align-items-center">
+                    <select id="logFilter" class="form-select form-select-sm me-2" style="width: 120px;">
+                        <option value="all">All Logs</option>
+                        <option value="IN">Check In</option>
+                        <option value="OUT">Check Out</option>
+                    </select>
+                    <span class="badge bg-light text-dark">{{ attendance_logs|length }} logs</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="logTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th><i class="fas fa-user me-1"></i>Employee</th>
+                                <th><i class="fas fa-exchange-alt me-1"></i>Type</th>
+                                <th><i class="fas fa-clock me-1"></i>Time</th>
+                                <th><i class="fas fa-map-marker-alt me-1"></i>Location</th>
+                                <th><i class="fas fa-desktop me-1"></i>Device</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in attendance_logs %}
+                            <tr class="log-row" data-type="{{ log.punch_type }}">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-circle bg-primary text-white me-2" style="width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold;">
+                                            {{ log.employee.first_name|first }}{{ log.employee.last_name|first }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">{{ log.employee.first_name }} {{ log.employee.last_name }}</div>
+                                            <small class="text-muted">{{ log.employee.employee_code }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if log.punch_type == 'IN' %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-sign-in-alt me-1"></i>Check In
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-sign-out-alt me-1"></i>Check Out
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ log.punch_time|time:"H:i:s" }}</td>
+                                <td>
+                                    {% if log.geo_lat and log.geo_long %}
+                                        <span class="badge bg-info" data-bs-toggle="tooltip" title="Lat: {{ log.geo_lat }}, Lng: {{ log.geo_long }}">
+                                            <i class="fas fa-map-marker-alt me-1"></i>Available
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if log.device %}
+                                        <span class="badge bg-secondary" data-bs-toggle="tooltip" title="IP: {{ log.device.ip_address }}">
+                                            {{ log.device.device_name }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4">
+                                    <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                                    <h6 class="text-muted">No punch logs for selected date</h6>
+                                    <small class="text-muted">Punch logs will appear here when employees check in/out.</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Add tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Search functionality for attendance table
+    document.getElementById('attendanceSearch').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#attendanceTable tbody tr');
+
+        rows.forEach(row => {
+            if (row.cells.length > 1) { // Skip empty state row
+                const employeeName = row.cells[0].textContent.toLowerCase();
+                const employeeCode = row.cells[0].textContent.toLowerCase();
+                const isVisible = employeeName.includes(searchTerm) || employeeCode.includes(searchTerm);
+                row.style.display = isVisible ? '' : 'none';
+            }
+        });
+    });
+
+    // Filter functionality for log table
+    document.getElementById('logFilter').addEventListener('change', function() {
+        const filterValue = this.value;
+        const rows = document.querySelectorAll('#logTable .log-row');
+
+        rows.forEach(row => {
+            const type = row.getAttribute('data-type');
+            const isVisible = filterValue === 'all' || type === filterValue;
+            row.style.display = isVisible ? '' : 'none';
+        });
+    });
+});
+</script>
+{% endblock %}

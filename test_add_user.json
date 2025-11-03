@@ -1,0 +1,10 @@
+{
+    "username": "new_user",
+    "email": "newuser@test.com",
+    "first_name": "New",
+    "last_name": "User",
+    "password": "user123",
+    "role": "employee",
+    "employee_code": "EMP001",
+    "mobile": "9876543210"
+}

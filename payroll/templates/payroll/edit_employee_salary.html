@@ -1,0 +1,67 @@
+{% extends 'core/base.html' %}
+
+{% block page_title %}Edit Employee Salary{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-edit"></i> Edit Employee Salary: {{ salary.employee.employee_code }}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.employee.id_for_label }}">Employee</label>
+                                {{ form.employee }}
+                                {% if form.employee.errors %}
+                                    <div class="text-danger">{{ form.employee.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.basic_salary.id_for_label }}">Basic Salary</label>
+                                {{ form.basic_salary }}
+                                {% if form.basic_salary.errors %}
+                                    <div class="text-danger">{{ form.basic_salary.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.effective_date.id_for_label }}">Effective Date</label>
+                                {{ form.effective_date }}
+                                {% if form.effective_date.errors %}
+                                    <div class="text-danger">{{ form.effective_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mt-4">
+                                {{ form.is_active }}
+                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                    Is Active
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group mt-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update Salary
+                        </button>
+                        <a href="{% url 'employee_salaries' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,237 @@
+{% extends 'core/base.html' %}
+
+{% block page_title %}System Settings{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Company Profile -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Company Profile</h5>
+            </div>
+            <div class="card-body">
+                {% if company_profile %}
+                <div class="row">
+                    <div class="col-sm-4"><strong>Name:</strong></div>
+                    <div class="col-sm-8">{{ company_profile.name }}</div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-sm-4"><strong>Address:</strong></div>
+                    <div class="col-sm-8">{{ company_profile.address }}</div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-sm-4"><strong>Email:</strong></div>
+                    <div class="col-sm-8">{{ company_profile.contact_email }}</div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-sm-4"><strong>Logo:</strong></div>
+                    <div class="col-sm-8">
+                        {% if company_profile.logo_url %}
+                            <img src="{{ company_profile.logo_url }}" alt="Company Logo" class="img-thumbnail" style="max-width: 100px;">
+                        {% else %}
+                            No logo uploaded
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted">No company profile configured</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Rules -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Attendance Rules</h5>
+            </div>
+            <div class="card-body">
+                {% for rule in attendance_rules %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6>{{ rule.rule_name }}</h6>
+                            <div class="row">
+                                <div class="col-sm-6"><strong>Grace Minutes:</strong> {{ rule.grace_minutes }}</div>
+                                <div class="col-sm-6"><strong>Rounding:</strong> {{ rule.rounding_policy|title }}</div>
+                            </div>
+                        </div>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'edit_attendance_rule' rule.id %}" class="btn btn-outline-primary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form method="post" action="{% url 'delete_attendance_rule' rule.id %}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this attendance rule?')">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% if not forloop.last %}<hr>{% endif %}
+                {% empty %}
+                <p class="text-muted">No attendance rules configured</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Work Week Settings -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Work Week Configuration</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Day</th>
+                                <th>Working Day</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for day in work_week %}
+                            <tr>
+                                <td>{{ day.day|title }}</td>
+                                <td>
+                                    {% if day.is_working_day %}
+                                        <span class="badge bg-success">Yes</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">No</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Information -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>System Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-sm-4"><strong>Database:</strong></div>
+                    <div class="col-sm-8">SQL Server</div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-sm-4"><strong>Framework:</strong></div>
+                    <div class="col-sm-8">Django 5.2.4</div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-sm-4"><strong>Frontend:</strong></div>
+                    <div class="col-sm-8">Bootstrap 5</div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-sm-4"><strong>Charts:</strong></div>
+                    <div class="col-sm-8">Chart.js</div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-sm-4"><strong>Time Zone:</strong></div>
+                    <div class="col-sm-8">Asia/Kolkata</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Configuration Actions -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Configuration Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="{% url 'edit_company_profile' %}" class="btn btn-primary w-100 mb-2">
+                            <i class="fas fa-edit"></i> Edit Company Profile
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'add_attendance_rule' %}" class="btn btn-success w-100 mb-2">
+                            <i class="fas fa-clock"></i> Add Attendance Rule
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'edit_work_week' %}" class="btn btn-warning w-100 mb-2">
+                            <i class="fas fa-calendar"></i> Configure Work Week
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="/admin/" target="_blank" class="btn btn-info w-100 mb-2">
+                            <i class="fas fa-cog"></i> Admin Panel
+                        </a>
+                    </div>
+                </div>
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle"></i>
+                    Configuration features are available in the Django Admin panel at <a href="/admin/" target="_blank">/admin/</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notification Settings -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Notification Settings</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="email_notifications" disabled>
+                            <label class="form-check-label" for="email_notifications">
+                                Email Notifications
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="sms_notifications" disabled>
+                            <label class="form-check-label" for="sms_notifications">
+                                SMS Notifications
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="push_notifications" disabled>
+                            <label class="form-check-label" for="push_notifications">
+                                Push Notifications
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Notification settings will be implemented in future updates.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

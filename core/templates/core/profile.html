@@ -1,0 +1,707 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Employee Profile - HexaAttendance Portal{% endblock %}
+
+{% block page_title %}Employee Profile{% endblock %}
+
+{% block content %}
+<!-- Profile Header -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card profile-header-card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-2 text-center">
+                        <div class="profile-picture-container">
+                            {% if employee.profile_picture %}
+                                <img src="{{ employee.profile_picture.url }}" alt="Profile Picture" class="rounded-circle profile-avatar" id="profileImage">
+                            {% else %}
+                                <div class="profile-avatar-placeholder" id="profileImage">
+                                    <i class="fas fa-user-circle fa-6x text-primary"></i>
+                                </div>
+                            {% endif %}
+                            <input type="file" id="profilePictureInput" name="profile_picture" accept="image/*" style="display: none;" onchange="previewImage(this)">
+                        </div>
+                    </div>
+                    <div class="col-md-7">
+                        <h2 class="profile-name">{{ employee.first_name }} {{ employee.last_name }}</h2>
+                        <p class="profile-code text-muted">{{ employee.employee_code }}</p>
+                        <div class="profile-meta">
+                            <span class="badge bg-primary me-2">{{ employee.designation.designation_name }}</span>
+                            <span class="badge bg-secondary me-2">{{ employee.department.department_name }}</span>
+                            {% if employee.status %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-end">
+                        <button class="btn btn-primary me-2" onclick="toggleEditMode()">
+                            <i class="fas fa-edit"></i> Edit Profile
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="backToDashboard()">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Profile Information -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user me-2"></i>Profile Information
+                    </h5>
+                    <button class="btn btn-sm btn-outline-primary" onclick="toggleEditMode()">
+                        <i class="fas fa-edit"></i> Edit Profile
+                    </button>
+                </div>
+                <div class="card-body">
+                    <form id="profileForm" method="post" action="{% url 'employee_profile' %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Employee Code</label>
+                                    <p>{{ employee.employee_code }}</p>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="first_name" class="form-label fw-bold">First Name</label>
+                                    <input type="text" class="form-control" id="first_name" name="first_name" value="{{ employee.first_name }}" readonly>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="last_name" class="form-label fw-bold">Last Name</label>
+                                    <input type="text" class="form-control" id="last_name" name="last_name" value="{{ employee.last_name }}" readonly>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="email" class="form-label fw-bold">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email" value="{{ employee.email }}" readonly>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="mobile" class="form-label fw-bold">Mobile</label>
+                                    <input type="text" class="form-control" id="mobile" name="mobile" value="{{ employee.mobile|default:'' }}" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Department</label>
+                                    <p>{{ employee.department.department_name }}</p>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Designation</label>
+                                    <p>{{ employee.designation.designation_name }}</p>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Shift</label>
+                                    <p>{{ employee.shift.shift_name }} ({{ employee.shift.start_time }} - {{ employee.shift.end_time }})</p>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Date of Joining</label>
+                                    <p>{{ employee.date_of_joining }}</p>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="username" class="form-label fw-bold">Username</label>
+                                    <input type="text" class="form-control" id="username" name="username" value="{% if employee.user %}{{ employee.user.username }}{% endif %}" readonly>
+                                </div>
+                            </div>
+                        </div>
+    
+                        <!-- Password Change Section -->
+                        <div class="row mt-4" id="passwordSection" style="display: none;">
+                            <div class="col-12">
+                                <h6 class="fw-bold mb-3">Change Password</h6>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="current_password" class="form-label">Current Password</label>
+                                            <input type="password" class="form-control" id="current_password" name="current_password">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="new_password" class="form-label">New Password</label>
+                                            <input type="password" class="form-control" id="new_password" name="new_password">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="confirm_password" class="form-label">Confirm New Password</label>
+                                            <input type="password" class="form-control" id="confirm_password" name="confirm_password">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+    
+                        <!-- Action Buttons -->
+                        <div class="row mt-4" id="actionButtons" style="display: none;">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-success me-2">
+                                    <i class="fas fa-save"></i> Save Changes
+                                </button>
+                                <button type="button" class="btn btn-secondary me-2" onclick="toggleEditMode()">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                                <button type="button" class="btn btn-outline-warning" onclick="togglePasswordChange()">
+                                    <i class="fas fa-key"></i> Change Password
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        <!-- Attendance Statistics -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Attendance Statistics (Current Month)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="stat-box">
+                            <div class="stat-number text-success">{{ attendance_stats.present_days|default:0 }}</div>
+                            <div class="stat-label">Present Days</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-box">
+                            <div class="stat-number text-danger">{{ attendance_stats.absent_days|default:0 }}</div>
+                            <div class="stat-label">Absent Days</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-box">
+                            <div class="stat-number text-warning">{{ attendance_stats.half_days|default:0 }}</div>
+                            <div class="stat-label">Half Days</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-box">
+                            <div class="stat-number text-info">{{ attendance_stats.total_hours|default:0 }}</div>
+                            <div class="stat-label">Total Hours</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Attendance -->
+        <div class="card mt-4 recent-attendance">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-history me-2"></i>Recent Attendance
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th><i class="fas fa-calendar"></i> Date</th>
+                                <th><i class="fas fa-info-circle"></i> Status</th>
+                                <th><i class="fas fa-sign-in-alt"></i> In</th>
+                                <th><i class="fas fa-sign-out-alt"></i> Out</th>
+                                <th><i class="fas fa-clock"></i> Hours</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for att in attendance %}
+                            <tr>
+                                <td><strong>{{ att.date|date:"M d, Y" }}</strong></td>
+                                <td>
+                                    {% if att.status == 'present' %}
+                                        <span class="badge bg-success rounded-pill">
+                                            <i class="fas fa-check"></i> Present
+                                        </span>
+                                    {% elif att.status == 'absent' %}
+                                        <span class="badge bg-danger rounded-pill">
+                                            <i class="fas fa-times"></i> Absent
+                                        </span>
+                                    {% elif att.status == 'half_day' %}
+                                        <span class="badge bg-warning rounded-pill">
+                                            <i class="fas fa-adjust"></i> Half Day
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary rounded-pill">{{ att.status|title }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ att.in_time|default:"-" }}</td>
+                                <td>{{ att.out_time|default:"-" }}</td>
+                                <td>
+                                    {% if att.total_hours %}
+                                        <span class="badge bg-info">{{ att.total_hours }}h</span>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    <i class="fas fa-calendar-times fa-2x mb-2"></i>
+                                    <br>No attendance records found
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Tasks -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-tasks me-2"></i>Recent Tasks
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if tasks %}
+                    <div class="task-list">
+                        {% for task in tasks %}
+                        <div class="task-item mb-3 p-3 border rounded">
+                            <div class="task-header d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="task-type">
+                                        <i class="fas fa-tag"></i>
+                                        <span class="fw-bold">{{ task.task_type }}</span>
+                                    </div>
+                                    <div class="task-description mt-1">{{ task.task_description|truncatechars:100 }}</div>
+                                </div>
+                                <div class="task-status">
+                                    {% if task.status == 'completed' %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle"></i> Completed
+                                        </span>
+                                    {% elif task.status == 'in_progress' %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-spinner fa-spin"></i> In Progress
+                                        </span>
+                                    {% elif task.status == 'cancelled' %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times-circle"></i> Cancelled
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-clock"></i> Pending
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="task-meta mt-2 text-muted small">
+                                <i class="fas fa-calendar"></i> Assigned: {{ task.date_assigned|date:"M d, Y" }}
+                                {% if task.due_date %}
+                                    | <i class="fas fa-clock"></i> Due: {{ task.due_date|date:"M d, Y" }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No tasks assigned</h5>
+                        <p class="text-muted">You're all caught up!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Today's Attendance -->
+        <div class="card">
+            <div class="card-header bg-gradient-success">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-calendar-day me-2"></i>Today's Attendance
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                {% if today_attendance %}
+                    <div class="attendance-status">
+                        {% if today_attendance.status == 'present' %}
+                            <div class="status-icon present">
+                                <i class="fas fa-check-circle fa-4x"></i>
+                            </div>
+                            <h4 class="status-text text-success">Present</h4>
+                        {% elif today_attendance.status == 'absent' %}
+                            <div class="status-icon absent">
+                                <i class="fas fa-times-circle fa-4x"></i>
+                            </div>
+                            <h4 class="status-text text-danger">Absent</h4>
+                        {% else %}
+                            <div class="status-icon partial">
+                                <i class="fas fa-clock fa-4x"></i>
+                            </div>
+                            <h4 class="status-text text-warning">{{ today_attendance.status|title }}</h4>
+                        {% endif %}
+                    </div>
+                    <div class="attendance-details mt-3">
+                        {% if today_attendance.in_time %}
+                            <div class="time-detail">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span><strong>In:</strong> {{ today_attendance.in_time }}</span>
+                            </div>
+                        {% endif %}
+                        {% if today_attendance.out_time %}
+                            <div class="time-detail">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span><strong>Out:</strong> {{ today_attendance.out_time }}</span>
+                            </div>
+                        {% endif %}
+                        {% if today_attendance.total_hours %}
+                            <div class="time-detail">
+                                <i class="fas fa-hourglass-half"></i>
+                                <span><strong>Hours:</strong> {{ today_attendance.total_hours }} hrs</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="attendance-status">
+                        <div class="status-icon not-marked">
+                            <i class="fas fa-question-circle fa-4x"></i>
+                        </div>
+                        <h4 class="status-text text-muted">Not Marked</h4>
+                        <p class="text-muted">Attendance not recorded yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <button class="btn btn-primary btn-lg w-100 mb-3" onclick="toggleEditMode()">
+                    <i class="fas fa-edit me-2"></i>Edit Profile
+                </button>
+                <button class="btn btn-secondary btn-lg w-100 mb-3" onclick="togglePasswordChange()">
+                    <i class="fas fa-key me-2"></i>Change Password
+                </button>
+                <button class="btn btn-info btn-lg w-100 mb-3" onclick="changePicture()">
+                    <i class="fas fa-camera me-2"></i>Change Picture
+                </button>
+                <button class="btn btn-secondary btn-lg w-100 mb-3" onclick="viewAttendanceHistory()">
+                    <i class="fas fa-history me-2"></i>View Attendance History
+                </button>
+                <button class="btn btn-warning btn-lg w-100 mb-3" onclick="viewLeaveHistory()">
+                    <i class="fas fa-calendar-alt me-2"></i>View Leave History
+                </button>
+                <button class="btn btn-dark btn-lg w-100" onclick="exportProfile()">
+                    <i class="fas fa-download me-2"></i>Export Profile Data
+                </button>
+                <button class="btn btn-success btn-lg w-100" onclick="backToDashboard()">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </button>
+            </div>
+        </div>
+
+        <!-- Recent Leave Applications -->
+        <div class="card mt-4 recent-leave">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-calendar-plus me-2"></i>Recent Leave Applications
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if leaves %}
+                    {% for leave in leaves %}
+                    <div class="leave-item mb-3 p-2 border rounded">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="leave-type fw-bold">{{ leave.leave_type.type_name }}</div>
+                                <div class="leave-dates text-muted small">
+                                    {{ leave.start_date }} to {{ leave.end_date }}
+                                </div>
+                            </div>
+                            <div class="leave-status">
+                                {% if leave.status == 'approved' %}
+                                    <span class="badge bg-success">Approved</span>
+                                {% elif leave.status == 'rejected' %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Pending</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-calendar-times text-muted mb-2"></i>
+                        <p class="text-muted small">No leave applications</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-header-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border: 4px solid white;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.profile-name {
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.profile-code {
+    margin-bottom: 10px;
+    font-size: 1.1em;
+}
+
+.stat-box {
+    padding: 15px;
+    border-radius: 8px;
+    background: #f8f9fa;
+    margin-bottom: 10px;
+}
+
+.stat-number {
+    font-size: 2em;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 0.9em;
+    color: #6c757d;
+}
+
+.task-item {
+    border-left: 4px solid #007bff;
+    background: #f8f9fa;
+}
+
+.task-item:hover {
+    background: #e9ecef;
+}
+
+.leave-item {
+    background: #f8f9fa;
+}
+
+.leave-item:hover {
+    background: #e9ecef;
+}
+
+.attendance-status .status-icon {
+    margin-bottom: 15px;
+}
+
+.time-detail {
+    margin-bottom: 8px;
+    padding: 5px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.time-detail:last-child {
+    border-bottom: none;
+}
+
+.btn-action {
+    transition: all 0.3s ease;
+}
+
+.btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+</style>
+
+<script>
+function toggleEditMode() {
+    const inputs = document.querySelectorAll('#profileForm input[readonly]');
+    const actionButtons = document.getElementById('actionButtons');
+    const editButton = document.querySelector('.card-header .btn-outline-primary');
+
+    if (inputs[0].hasAttribute('readonly')) {
+        // Enable editing
+        inputs.forEach(input => input.removeAttribute('readonly'));
+        actionButtons.style.display = 'block';
+        editButton.innerHTML = '<i class="fas fa-times"></i> Cancel Edit';
+        editButton.className = 'btn btn-sm btn-outline-danger';
+    } else {
+        // Disable editing
+        inputs.forEach(input => input.setAttribute('readonly', 'readonly'));
+        actionButtons.style.display = 'none';
+        document.getElementById('passwordSection').style.display = 'none';
+        editButton.innerHTML = '<i class="fas fa-edit"></i> Edit Profile';
+        editButton.className = 'btn btn-sm btn-outline-primary';
+        // Reset form
+        document.getElementById('profileForm').reset();
+    }
+}
+
+function togglePasswordChange() {
+    const passwordSection = document.getElementById('passwordSection');
+    const passwordButton = document.querySelector('.btn-outline-warning');
+
+    if (passwordSection.style.display === 'none') {
+        passwordSection.style.display = 'block';
+        passwordButton.innerHTML = '<i class="fas fa-times"></i> Cancel Password Change';
+        passwordButton.className = 'btn btn-outline-danger';
+    } else {
+        passwordSection.style.display = 'none';
+        passwordButton.innerHTML = '<i class="fas fa-key"></i> Change Password';
+        passwordButton.className = 'btn btn-outline-warning';
+        // Clear password fields
+        document.getElementById('current_password').value = '';
+        document.getElementById('new_password').value = '';
+        document.getElementById('confirm_password').value = '';
+    }
+}
+
+function changePicture() {
+    document.getElementById('profilePictureInput').click();
+}
+
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            alert('Please select a valid image file.');
+            return;
+        }
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('File size must be less than 5MB.');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const profileImage = document.getElementById('profileImage');
+            if (profileImage.tagName === 'IMG') {
+                profileImage.src = e.target.result;
+            } else {
+                // Replace placeholder with actual image
+                const container = profileImage.parentElement;
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.alt = 'Profile Picture';
+                img.className = 'rounded-circle profile-avatar';
+                img.id = 'profileImage';
+                container.replaceChild(img, profileImage);
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function viewAttendanceHistory() {
+    // Scroll to attendance section
+    document.querySelector('.recent-attendance').scrollIntoView({ behavior: 'smooth' });
+    // Highlight the section
+    const attendanceCard = document.querySelector('.recent-attendance .card');
+    attendanceCard.style.boxShadow = '0 0 15px rgba(0,123,255,0.3)';
+    setTimeout(() => {
+        attendanceCard.style.boxShadow = '';
+    }, 2000);
+}
+
+function viewLeaveHistory() {
+    // Scroll to leave section
+    document.querySelector('.recent-leave').scrollIntoView({ behavior: 'smooth' });
+    // Highlight the section
+    const leaveCard = document.querySelector('.recent-leave .card');
+    leaveCard.style.boxShadow = '0 0 15px rgba(255,193,7,0.3)';
+    setTimeout(() => {
+        leaveCard.style.boxShadow = '';
+    }, 2000);
+}
+
+function exportProfile() {
+    // Create a simple profile data export
+    const profileData = {
+        employee_code: '{{ employee.employee_code }}',
+        first_name: '{{ employee.first_name }}',
+        last_name: '{{ employee.last_name }}',
+        email: '{{ employee.email }}',
+        mobile: '{{ employee.mobile }}',
+        department: '{{ employee.department.department_name }}',
+        designation: '{{ employee.designation.designation_name }}',
+        shift: '{{ employee.shift.shift_name }} ({{ employee.shift.start_time }} - {{ employee.shift.end_time }})',
+        date_of_joining: '{{ employee.date_of_joining }}',
+        export_date: new Date().toISOString()
+    };
+
+    const dataStr = JSON.stringify(profileData, null, 2);
+    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(dataBlob);
+    link.download = 'profile_data_{{ employee.employee_code }}.json';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Show success message
+    showNotification('Profile data exported successfully!', 'success');
+}
+
+function showNotification(message, type) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    document.body.appendChild(notification);
+
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 3000);
+}
+
+function backToDashboard() {
+    window.location.href = '/employee/';
+}
+
+// Add smooth animations on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+{% endblock %}

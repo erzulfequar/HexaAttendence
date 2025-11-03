@@ -1,0 +1,284 @@
+{% extends 'core/base.html' %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+{% if user_role == 'Admin' %}
+<!-- Admin Dashboard Content -->
+<div class="alert alert-info">
+    <h5><i class="fas fa-info-circle me-2"></i>Admin Dashboard</h5>
+    <p>Welcome to the Admin Dashboard. You have full access to manage users, system settings, and view all reports.</p>
+</div>
+{% elif user_role == 'Employee' %}
+<!-- Employee Dashboard Content -->
+<div class="alert alert-success">
+    <h5><i class="fas fa-user me-2"></i>Employee Dashboard</h5>
+    <p>Welcome to your personal dashboard. Here you can view your attendance, apply for leave, and manage your tasks.</p>
+</div>
+{% elif user_role == 'Manager' %}
+<!-- Manager Dashboard Content -->
+<div class="alert alert-warning">
+    <h5><i class="fas fa-user-tie me-2"></i>Manager Dashboard</h5>
+    <p>Welcome to the Manager Dashboard. You can oversee your department's attendance, manage leave requests, and track employee locations.</p>
+</div>
+{% else %}
+<!-- Default Dashboard Content -->
+<div class="alert alert-secondary">
+    <h5><i class="fas fa-question-circle me-2"></i>Dashboard</h5>
+    <p>Please contact your administrator to assign a proper role to access the full features.</p>
+</div>
+{% endif %}
+<!-- Welcome Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-gradient-primary text-white">
+            <div class="card-body py-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-1"><i class="fas fa-chart-line me-2"></i>Dashboard Overview</h4>
+                        <p class="mb-0 opacity-75">Welcome back! Here's your attendance summary for today.</p>
+                    </div>
+                    <div class="text-end">
+                        <div class="h6 mb-0">{{ current_date|date:"l, F j, Y" }}</div>
+                        <small class="opacity-75">{{ current_time|time:"H:i" }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-2">Total Employees</h6>
+                        <h2 class="mb-0">{{ total_employees }}</h2>
+                        <small class="opacity-75">Active staff</small>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users fa-3x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-2">Present Today</h6>
+                        <h2 class="mb-0">{{ present_today }}</h2>
+                        <small class="opacity-75">{{ present_percentage }}% attendance</small>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-3x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-danger text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-2">Absent Today</h6>
+                        <h2 class="mb-0">{{ absent_today }}</h2>
+                        <small class="opacity-75">{{ absent_percentage }}% absent</small>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-times-circle fa-3x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-warning text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-2">On Leave</h6>
+                        <h2 class="mb-0">{{ on_leave_today }}</h2>
+                        <small class="opacity-75">Approved leaves</small>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-calendar-times fa-3x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-gradient-primary text-white">
+                <h6 class="mb-0"><i class="fas fa-building me-2"></i>Department-wise Attendance</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="deptChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-gradient-primary text-white">
+                <h6 class="mb-0"><i class="fas fa-chart-line me-2"></i>Monthly Attendance Trend</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="monthlyChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Attendance Logs -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-clock me-2"></i>Recent Attendance Logs</h6>
+                <a href="{% url 'attendance' %}" class="btn btn-light btn-sm">
+                    <i class="fas fa-eye me-1"></i>View All
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th><i class="fas fa-user me-1"></i>Employee</th>
+                                <th><i class="fas fa-calendar me-1"></i>Date</th>
+                                <th><i class="fas fa-info-circle me-1"></i>Status</th>
+                                <th><i class="fas fa-sign-in-alt me-1"></i>In Time</th>
+                                <th><i class="fas fa-sign-out-alt me-1"></i>Out Time</th>
+                                <th><i class="fas fa-hourglass-half me-1"></i>Total Hours</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in recent_logs %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-circle bg-primary text-white me-2" style="width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold;">
+                                            {{ log.employee.first_name|first }}{{ log.employee.last_name|first }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">{{ log.employee.employee_code }}</div>
+                                            <small class="text-muted">{{ log.employee.first_name }} {{ log.employee.last_name }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ log.date|date:"M d, Y" }}</td>
+                                <td>
+                                    <span class="badge bg-{% if log.status == 'present' %}success{% elif log.status == 'absent' %}danger{% else %}warning{% endif %} fs-6 px-3 py-1">
+                                        <i class="fas fa-{% if log.status == 'present' %}check-circle{% elif log.status == 'absent' %}times-circle{% else %}exclamation-triangle{% endif %} me-1"></i>
+                                        {{ log.status|title }}
+                                    </span>
+                                </td>
+                                <td>{{ log.in_time|default:'-'|time:"H:i" }}</td>
+                                <td>{{ log.out_time|default:'-'|time:"H:i" }}</td>
+                                <td>
+                                    {% if log.total_hours %}
+                                        <span class="badge bg-info">{{ log.total_hours }}</span>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                    <h6 class="text-muted">No attendance records found</h6>
+                                    <small class="text-muted">Attendance logs will appear here once employees start checking in.</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Department-wise Attendance Chart
+    const deptCtx = document.getElementById('deptChart');
+    if (deptCtx) {
+        const ctx = deptCtx.getContext('2d');
+        // Static data for now
+        const deptLabels = ['HR', 'IT', 'Finance'];
+        const deptPresent = [5, 8, 6];
+        const deptAbsent = [1, 2, 1];
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: deptLabels,
+                datasets: [{
+                    label: 'Present',
+                    data: deptPresent,
+                    backgroundColor: 'rgba(40, 167, 69, 0.8)',
+                }, {
+                    label: 'Absent',
+                    data: deptAbsent,
+                    backgroundColor: 'rgba(220, 53, 69, 0.8)',
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    // Monthly Attendance Trend Chart (placeholder data)
+    const monthlyCtx = document.getElementById('monthlyChart');
+    if (monthlyCtx) {
+        const ctx = monthlyCtx.getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Present',
+                    data: [65, 59, 80, 81, 56, 55],
+                    borderColor: 'rgba(40, 167, 69, 1)',
+                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                }, {
+                    label: 'Absent',
+                    data: [28, 48, 40, 19, 86, 27],
+                    borderColor: 'rgba(220, 53, 69, 1)',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

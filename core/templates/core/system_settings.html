@@ -1,0 +1,151 @@
+{% extends 'core/base.html' %}
+
+{% block page_title %}System Settings{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-cogs"></i> System Configuration</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <!-- General Settings -->
+                    <div class="mb-4">
+                        <h6 class="text-primary mb-3"><i class="fas fa-sliders-h"></i> General Settings</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="system_name" class="form-label">System Name</label>
+                                <input type="text" class="form-control" id="system_name" name="system_name" value="HexaAttendance Portal">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="company_name" class="form-label">Company Name</label>
+                                <input type="text" class="form-control" id="company_name" name="company_name" value="HexaTech Solutions">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="timezone" class="form-label">Default Timezone</label>
+                                <select class="form-control" id="timezone" name="timezone">
+                                    <option value="UTC">UTC</option>
+                                    <option value="Asia/Kolkata" selected>Asia/Kolkata</option>
+                                    <option value="America/New_York">America/New_York</option>
+                                    <option value="Europe/London">Europe/London</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="language" class="form-label">Default Language</label>
+                                <select class="form-control" id="language" name="language">
+                                    <option value="en" selected>English</option>
+                                    <option value="hi">Hindi</option>
+                                    <option value="es">Spanish</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Attendance Settings -->
+                    <div class="mb-4">
+                        <h6 class="text-success mb-3"><i class="fas fa-clock"></i> Attendance Settings</h6>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="work_start" class="form-label">Work Start Time</label>
+                                <input type="time" class="form-control" id="work_start" name="work_start" value="09:00">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="work_end" class="form-label">Work End Time</label>
+                                <input type="time" class="form-control" id="work_end" name="work_end" value="18:00">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="grace_period" class="form-label">Grace Period (minutes)</label>
+                                <input type="number" class="form-control" id="grace_period" name="grace_period" value="15" min="0">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="auto_logout" class="form-label">Auto Logout After (hours)</label>
+                                <input type="number" class="form-control" id="auto_logout" name="auto_logout" value="8" min="1">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="working_days" class="form-label">Working Days per Week</label>
+                                <input type="number" class="form-control" id="working_days" name="working_days" value="5" min="1" max="7">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Leave Settings -->
+                    <div class="mb-4">
+                        <h6 class="text-info mb-3"><i class="fas fa-calendar-times"></i> Leave Settings</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="annual_leave" class="form-label">Annual Leave Days</label>
+                                <input type="number" class="form-control" id="annual_leave" name="annual_leave" value="30" min="0">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="sick_leave" class="form-label">Sick Leave Days</label>
+                                <input type="number" class="form-control" id="sick_leave" name="sick_leave" value="12" min="0">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="leave_approval" class="form-label">Auto-approve Leave</label>
+                                <select class="form-control" id="leave_approval" name="leave_approval">
+                                    <option value="false" selected>Manual Approval Required</option>
+                                    <option value="true">Auto-approve</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="leave_carryover" class="form-label">Allow Leave Carryover</label>
+                                <select class="form-control" id="leave_carryover" name="leave_carryover">
+                                    <option value="true" selected>Yes</option>
+                                    <option value="false">No</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Settings -->
+                    <div class="mb-4">
+                        <h6 class="text-warning mb-3"><i class="fas fa-shield-alt"></i> Security Settings</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="password_min_length" class="form-label">Minimum Password Length</label>
+                                <input type="number" class="form-control" id="password_min_length" name="password_min_length" value="8" min="6">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="session_timeout" class="form-label">Session Timeout (minutes)</label>
+                                <input type="number" class="form-control" id="session_timeout" name="session_timeout" value="60" min="15">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="max_login_attempts" class="form-label">Max Login Attempts</label>
+                                <input type="number" class="form-control" id="max_login_attempts" name="max_login_attempts" value="5" min="1">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="two_factor" class="form-label">Two-Factor Authentication</label>
+                                <select class="form-control" id="two_factor" name="two_factor">
+                                    <option value="false" selected>Disabled</option>
+                                    <option value="true">Enabled</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'admin' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Admin
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

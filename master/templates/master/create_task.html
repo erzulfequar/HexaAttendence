@@ -1,0 +1,78 @@
+{% extends 'core/base.html' %}
+
+{% block page_title %}Create Task{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header">
+                <h5>Create New Task</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.task_type.id_for_label }}" class="form-label">Task Type</label>
+                                {{ form.task_type }}
+                                {% if form.task_type.errors %}
+                                    <div class="text-danger">{{ form.task_type.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.allotted_employee.id_for_label }}" class="form-label">Allotted Employee</label>
+                                {{ form.allotted_employee }}
+                                {% if form.allotted_employee.errors %}
+                                    <div class="text-danger">{{ form.allotted_employee.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.task_description.id_for_label }}" class="form-label">Task Description</label>
+                        {{ form.task_description }}
+                        {% if form.task_description.errors %}
+                            <div class="text-danger">{{ form.task_description.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.visiting_company_name.id_for_label }}" class="form-label">Visiting Company Name</label>
+                                {{ form.visiting_company_name }}
+                                {% if form.visiting_company_name.errors %}
+                                    <div class="text-danger">{{ form.visiting_company_name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.company_location.id_for_label }}" class="form-label">Company Location</label>
+                                {{ form.company_location }}
+                                {% if form.company_location.errors %}
+                                    <div class="text-danger">{{ form.company_location.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.due_date.id_for_label }}" class="form-label">Due Date</label>
+                        {{ form.due_date }}
+                        {% if form.due_date.errors %}
+                            <div class="text-danger">{{ form.due_date.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'master' %}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Create Task</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

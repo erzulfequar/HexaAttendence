@@ -1,0 +1,292 @@
+{% extends 'core/base.html' %}
+
+{% load static %}
+
+{% block title %}Mark Attendance - HexaAttendance Portal{% endblock %}
+
+{% block page_title %}Mark Attendance{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-clock"></i>
+                    {% if punch_type == 'IN' %}Check In{% else %}Check Out{% endif %} - {{ employee.first_name }} {{ employee.last_name }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Employee Info -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="text-center">
+                            <div id="camera-container" class="mb-3">
+                                <video id="camera" class="img-fluid rounded" autoplay playsinline style="max-width: 100%; height: auto;"></video>
+                                <canvas id="canvas" style="display: none;"></canvas>
+                            </div>
+                            <button id="capture-btn" class="btn btn-primary mb-2" disabled>
+                                <i class="fas fa-camera"></i> Capture Selfie
+                            </button>
+                            <div id="captured-image" class="mt-2" style="display: none;">
+                                <img id="selfie-preview" class="img-fluid rounded" style="max-width: 200px;">
+                                <br>
+                                <button id="retake-btn" class="btn btn-secondary btn-sm mt-1">
+                                    <i class="fas fa-redo"></i> Retake
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="employee-info">
+                            <h6>Employee Details</h6>
+                            <p><strong>Code:</strong> {{ employee.employee_code }}</p>
+                            <p><strong>Name:</strong> {{ employee.first_name }} {{ employee.last_name }}</p>
+                            <p><strong>Department:</strong> {{ employee.department.department_name }}</p>
+                            <p><strong>Shift:</strong> {{ employee.shift.shift_name }} ({{ employee.shift.start_time }} - {{ employee.shift.end_time }})</p>
+                            <p><strong>Today's Status:</strong>
+                                {% if today_attendance %}
+                                    <span class="badge bg-success">{{ today_attendance.status|title }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Not Marked</span>
+                                {% endif %}
+                            </p>
+                        </div>
+
+                        <!-- Location Info -->
+                        <div class="mt-3">
+                            <h6>Location</h6>
+                            <div id="location-info" class="alert alert-info">
+                                <i class="fas fa-map-marker-alt"></i>
+                                Getting your location...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attendance Options -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-primary">
+                            <div class="card-body text-center">
+                                <i class="fas fa-mobile-alt fa-3x text-primary mb-2"></i>
+                                <h6>Mobile Device</h6>
+                                <p class="text-muted small">Use camera and GPS from your mobile device</p>
+                                <button id="mobile-btn" class="btn btn-primary btn-lg w-100" onclick="markAttendance('mobile')">
+                                    <i class="fas fa-mobile-alt"></i> Mark with Mobile
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-success">
+                            <div class="card-body text-center">
+                                <i class="fas fa-desktop fa-3x text-success mb-2"></i>
+                                <h6>Office Device</h6>
+                                <p class="text-muted small">Use office computer/device for attendance</p>
+                                <button id="device-btn" class="btn btn-success btn-lg w-100" onclick="markAttendance('device')">
+                                    <i class="fas fa-desktop"></i> Mark with Device
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Messages -->
+                <div id="status-message" class="mt-3" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let stream = null;
+let capturedImageData = null;
+let geoLocation = null;
+
+// Initialize camera
+async function initCamera() {
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'user' },
+            audio: false
+        });
+        const video = document.getElementById('camera');
+        video.srcObject = stream;
+        document.getElementById('capture-btn').disabled = false;
+    } catch (error) {
+        console.error('Error accessing camera:', error);
+        document.getElementById('camera-container').innerHTML = `
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                Camera access denied or not available. You can still mark attendance using office device option.
+            </div>
+        `;
+    }
+}
+
+// Get geo location
+function getLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                geoLocation = {
+                    lat: position.coords.latitude,
+                    long: position.coords.longitude
+                };
+                document.getElementById('location-info').innerHTML = `
+                    <i class="fas fa-map-marker-alt"></i>
+                    Location: ${geoLocation.lat.toFixed(6)}, ${geoLocation.long.toFixed(6)}
+                `;
+                document.getElementById('location-info').className = 'alert alert-success';
+            },
+            function(error) {
+                console.error('Error getting location:', error);
+                document.getElementById('location-info').innerHTML = `
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Location access denied. Attendance may not be recorded.
+                `;
+                document.getElementById('location-info').className = 'alert alert-warning';
+            }
+        );
+    } else {
+        document.getElementById('location-info').innerHTML = `
+            <i class="fas fa-exclamation-triangle"></i>
+            Geolocation not supported by this browser.
+        `;
+        document.getElementById('location-info').className = 'alert alert-danger';
+    }
+}
+
+// Capture selfie
+function captureSelfie() {
+    const video = document.getElementById('camera');
+    const canvas = document.getElementById('canvas');
+    const context = canvas.getContext('2d');
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    capturedImageData = canvas.toDataURL('image/jpeg', 0.8);
+
+    document.getElementById('selfie-preview').src = capturedImageData;
+    document.getElementById('captured-image').style.display = 'block';
+    document.getElementById('camera').style.display = 'none';
+    document.getElementById('capture-btn').style.display = 'none';
+}
+
+// Retake selfie
+function retakeSelfie() {
+    document.getElementById('captured-image').style.display = 'none';
+    document.getElementById('camera').style.display = 'block';
+    document.getElementById('capture-btn').style.display = 'inline-block';
+    capturedImageData = null;
+}
+
+// Mark attendance
+async function markAttendance(deviceType) {
+    const statusDiv = document.getElementById('status-message');
+
+    // Validate requirements
+    if (deviceType === 'mobile' && !capturedImageData) {
+        statusDiv.innerHTML = '<div class="alert alert-danger">Please capture a selfie first.</div>';
+        statusDiv.style.display = 'block';
+        return;
+    }
+
+    if (!geoLocation && deviceType === 'mobile') {
+        statusDiv.innerHTML = '<div class="alert alert-danger">Location access is required for mobile attendance.</div>';
+        statusDiv.style.display = 'block';
+        return;
+    }
+
+    // Disable buttons
+    document.getElementById('mobile-btn').disabled = true;
+    document.getElementById('device-btn').disabled = true;
+
+    statusDiv.innerHTML = '<div class="alert alert-info">Processing attendance...</div>';
+    statusDiv.style.display = 'block';
+
+    try {
+        const formData = new FormData();
+        const attendanceData = {
+            employee_id: '{{ employee.employee_code }}',
+            punch_type: '{{ punch_type }}',
+            device_name: deviceType === 'mobile' ? 'Mobile Device' : 'Office Device',
+            geo_lat: geoLocation ? geoLocation.lat : null,
+            geo_long: geoLocation ? geoLocation.long : null
+        };
+
+        formData.append('data', JSON.stringify(attendanceData));
+
+        if (capturedImageData) {
+            // Convert base64 to blob
+            const response = await fetch(capturedImageData);
+            const blob = await response.blob();
+            formData.append('selfie', blob, 'selfie.jpg');
+        }
+
+        const response = await fetch('/attendance/submit/', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            statusDiv.innerHTML = `<div class="alert alert-success">${result.message} at ${result.punch_time}</div>`;
+            // Redirect after success
+            setTimeout(() => {
+                window.location.href = '/employee/';
+            }, 2000);
+        } else {
+            statusDiv.innerHTML = `<div class="alert alert-danger">${result.message}</div>`;
+            // Re-enable buttons
+            document.getElementById('mobile-btn').disabled = false;
+            document.getElementById('device-btn').disabled = false;
+        }
+
+    } catch (error) {
+        console.error('Error:', error);
+        statusDiv.innerHTML = '<div class="alert alert-danger">An error occurred while marking attendance.</div>';
+        // Re-enable buttons
+        document.getElementById('mobile-btn').disabled = false;
+        document.getElementById('device-btn').disabled = false;
+    }
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    initCamera();
+    getLocation();
+
+    document.getElementById('capture-btn').addEventListener('click', captureSelfie);
+    document.getElementById('retake-btn').addEventListener('click', retakeSelfie);
+});
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', function() {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+    }
+});
+</script>
+
+<style>
+#camera {
+    border: 2px solid #ddd;
+    border-radius: 8px;
+}
+
+.employee-info {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.card {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %}

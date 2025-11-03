@@ -1,0 +1,183 @@
+{% extends 'core/base.html' %}
+
+{% block page_title %}Add User{% endblock %}
+
+{% block content %}
+<script>
+function toggleEmployeeFields() {
+    var role = document.getElementById('role').value;
+    var employeeFields = document.getElementById('employee_fields');
+    var managerField = document.getElementById('manager_field');
+
+    if (role === 'Employee' || role === 'Manager') {
+        employeeFields.style.display = 'block';
+        // Show manager field only for Employee role
+        if (role === 'Employee') {
+            managerField.style.display = 'block';
+        } else {
+            managerField.style.display = 'none';
+        }
+    } else {
+        employeeFields.style.display = 'none';
+    }
+}
+
+function toggleNewDepartment() {
+    var deptSelect = document.getElementById('department');
+    var newDeptDiv = document.getElementById('new_department_div');
+    if (deptSelect.value === 'new') {
+        newDeptDiv.style.display = 'block';
+    } else {
+        newDeptDiv.style.display = 'none';
+        document.getElementById('new_department').value = '';
+    }
+}
+
+function toggleNewDesignation() {
+    var desigSelect = document.getElementById('designation');
+    var newDesigDiv = document.getElementById('new_designation_div');
+    if (desigSelect.value === 'new') {
+        newDesigDiv.style.display = 'block';
+    } else {
+        newDesigDiv.style.display = 'none';
+        document.getElementById('new_designation').value = '';
+    }
+}
+</script>
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-user-plus"></i> Add New User</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="first_name" class="form-label">First Name</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="last_name" class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="confirm_password" class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="role" class="form-label">Role</label>
+                            <select class="form-control" id="role" name="role" required onchange="toggleEmployeeFields()">
+                                <option value="">Select Role</option>
+                                <option value="Admin">Admin</option>
+                                <option value="Manager">Manager</option>
+                                <option value="Employee">Employee</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="employee_id" class="form-label">Employee ID</label>
+                            <input type="text" class="form-control" id="employee_id" name="employee_id">
+                        </div>
+                    </div>
+                    <div id="employee_fields" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="department" class="form-label">Department</label>
+                                <select class="form-control" id="department" name="department" onchange="toggleNewDepartment()">
+                                    <option value="">Select Department</option>
+                                    {% for dept in departments %}
+                                    <option value="{{ dept.department_id }}">{{ dept.department_name }}</option>
+                                    {% endfor %}
+                                    <option value="new">+ Add New Department</option>
+                                </select>
+                                <div id="new_department_div" style="display: none; margin-top: 10px;">
+                                    <input type="text" class="form-control" id="new_department" name="new_department" placeholder="Enter new department name">
+                                </div>
+                            </div>
+                            <div id="manager_field" class="col-md-6 mb-3" style="display: none;">
+                                <label for="manager" class="form-label">Manager</label>
+                                <select class="form-control" id="manager" name="manager">
+                                    <option value="">Select Manager</option>
+                                    {% for mgr in managers %}
+                                    <option value="{{ mgr.employee_id }}">{{ mgr.first_name }} {{ mgr.last_name }} ({{ mgr.employee_code }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="designation" class="form-label">Designation</label>
+                                <select class="form-control" id="designation" name="designation" onchange="toggleNewDesignation()">
+                                    <option value="">Select Designation</option>
+                                    {% for desig in designations %}
+                                    <option value="{{ desig.designation_id }}">{{ desig.designation_name }}</option>
+                                    {% endfor %}
+                                    <option value="new">+ Add New Designation</option>
+                                </select>
+                                <div id="new_designation_div" style="display: none; margin-top: 10px;">
+                                    <input type="text" class="form-control" id="new_designation" name="new_designation" placeholder="Enter new designation name">
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="shift" class="form-label">Shift</label>
+                                <select class="form-control" id="shift" name="shift">
+                                    <option value="">Select Shift</option>
+                                    {% for sh in shifts %}
+                                    <option value="{{ sh.shift_id }}">{{ sh.shift_name }} ({{ sh.start_time }} - {{ sh.end_time }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="date_of_joining" class="form-label">Date of Joining</label>
+                                <input type="date" class="form-control" id="date_of_joining" name="date_of_joining">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="mobile" class="form-label">Mobile</label>
+                            <input type="tel" class="form-control" id="mobile" name="mobile">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-control" id="status" name="status">
+                                <option value="True">Active</option>
+                                <option value="False">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'admin' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Admin
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Create User
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
