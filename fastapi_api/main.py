@@ -1,32 +1,49 @@
-from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.orm import Session
-from typing import List, Optional
 import os
-from datetime import datetime
 import sys
-import os
-from database import get_db
-from auth import authenticate_user, create_access_token, verify_token
-from schemas import Token, UserLogin
 import django
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
+##############################################
+# 1) Correct Django Path Setup
+##############################################
 
+# FastAPI folder: fastapi_api/
+# Django project folder: hexaattendanceportal/
+
+# Add project ROOT directory to PYTHONPATH
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(BASE_DIR)
+
+# Set Django settings module
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "hexaattendanceportal.settings")
+
+# Initialize Django
 django.setup()
 
 
+##############################################
+# 2) Import Django-dependent modules
+##############################################
 
+from fastapi_api.database import get_db
+from fastapi_api.auth import authenticate_user, create_access_token, verify_token
+from fastapi_api.schemas import Token, UserLogin
+from fastapi_api.routers import admin_auth
+
+
+##############################################
+# 3) Create FastAPI App
+##############################################
 
 app = FastAPI(title="Attendance Portal API", version="1.0.0")
 
-# CORS middleware for Android app
+# CORS for mobile apps or frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify your Android app's domain
+    allow_origins=["*"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -34,10 +51,13 @@ app.add_middleware(
 
 security = HTTPBearer()
 
-# Include only admin auth router for testing
-from routers import admin_auth
+# Include Routers
 app.include_router(admin_auth.router)
 
+
+##############################################
+# 4) Local Run Support
+##############################################
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8002)
