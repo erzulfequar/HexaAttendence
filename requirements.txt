@@ -16,3 +16,5 @@ passlib[bcrypt]==1.7.4
 gunicorn==21.2.0
 python-dotenv==1.0.1
 typing-extensions==4.12.2
+PyJWT==2.8.0
+
