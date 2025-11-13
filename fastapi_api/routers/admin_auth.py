@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from typing import Optional, List
 from datetime import datetime
 import sys
 import os
@@ -14,9 +13,8 @@ django.setup()
 from django.db import models
 from django.contrib.auth.models import User
 
-# 🔥 Correct Import (IMPORTANT)
+# IMPORTS
 from fastapi_api.auth import authenticate_user, create_access_token, verify_token, require_admin_role
-
 from core.models import UserProfile, Role
 from master.models import Employee
 from fastapi_api.schemas import UserLogin, Token, AdminSignup, UserCreate
@@ -25,8 +23,8 @@ router = APIRouter()
 security = HTTPBearer()
 
 
+# ✔ Validate Admin From Token
 def get_current_admin_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Extract user from JWT"""
     token = credentials.credentials
     user = verify_token(token)
 
@@ -39,23 +37,22 @@ def get_current_admin_user(credentials: HTTPAuthorizationCredentials = Depends(s
     return user
 
 
-# 🔵 API 1: Admin Login
+# 🔵 API 1: ADMIN LOGIN
 @router.post("/api/admin/login", response_model=Token)
 def admin_login(user_credentials: UserLogin):
-
     user = authenticate_user(user_credentials.username, user_credentials.password)
     if not user:
-        raise HTTPException(status_code=401, detail="Incorrect username or password")
+        raise HTTPException(401, "Incorrect username or password")
 
     if not require_admin_role(user.id):
-        raise HTTPException(status_code=403, detail="Admin access required")
+        raise HTTPException(403, "Admin access required")
 
-    access_token = create_access_token(subject=user.username)
+    access_token = create_access_token({"sub": user.username, "user_id": user.id})
 
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-# 🔵 API 2: Signup new admin
+# 🔵 API 2: ADMIN SIGNUP
 @router.post("/api/admin/signup")
 def admin_signup(admin_data: AdminSignup):
 
@@ -65,7 +62,6 @@ def admin_signup(admin_data: AdminSignup):
     if User.objects.filter(email=admin_data.email).exists():
         raise HTTPException(400, "Email already exists")
 
-    # Correct role creation
     admin_role, created = Role.objects.get_or_create(
         role_name="Admin",
         defaults={"description": "System Administrator"}
@@ -95,7 +91,7 @@ def admin_signup(admin_data: AdminSignup):
     }
 
 
-# 🔵 API 3: Add User (Admin Only)
+# 🔵 API 3: ADD USER (ADMIN ONLY)
 @router.post("/api/admin/add-user")
 def add_user(user_data: UserCreate, current_admin=Depends(get_current_admin_user)):
 
@@ -105,7 +101,6 @@ def add_user(user_data: UserCreate, current_admin=Depends(get_current_admin_user
     if User.objects.filter(email=user_data.email).exists():
         raise HTTPException(400, "Email already exists")
 
-    # Validate role
     valid_roles = ["Admin", "Manager", "Employee"]
     if user_data.role.capitalize() not in valid_roles:
         raise HTTPException(400, "Invalid role")
@@ -145,7 +140,7 @@ def add_user(user_data: UserCreate, current_admin=Depends(get_current_admin_user
     return {"message": f"{user_data.role} created", "user_id": user.id}
 
 
-# 🔵 Verify Token
+# 🔵 VERIFY AUTH (ADMIN ONLY)
 @router.get("/api/admin/verify-auth")
 def verify_auth(current_admin=Depends(get_current_admin_user)):
     return {
@@ -156,7 +151,25 @@ def verify_auth(current_admin=Depends(get_current_admin_user)):
     }
 
 
-# 🔵 List All Users
+# 🔵 LIST ALL USERS
 @router.get("/api/admin/users")
 def list_users(current_admin=Depends(get_current_admin_user)):
-    users = User.objects.all(
+    users = User.objects.all().select_related("userprofile")
+    user_list = []
+
+    for user in users:
+        profile = getattr(user, "userprofile", None)
+        role_name = profile.role.role_name if profile and profile.role else None
+
+        user_list.append({
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "role": role_name,
+            "is_active": user.is_active,
+            "date_joined": user.date_joined.strftime("%Y-%m-%d %H:%M:%S"),
+        })
+
+    return {"users": user_list}
