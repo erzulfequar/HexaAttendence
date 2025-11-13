@@ -7,11 +7,19 @@ import os
 from datetime import datetime
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
 from database import get_db
 from auth import authenticate_user, create_access_token, verify_token
 from schemas import Token, UserLogin
+import django
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "hexaattendanceportal.settings")
+django.setup()
+
+
+
 
 app = FastAPI(title="Attendance Portal API", version="1.0.0")
 
