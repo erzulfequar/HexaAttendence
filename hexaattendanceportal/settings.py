@@ -16,6 +16,8 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     'hexaattendence.onrender.com',
+     "hexaattendence-1.onrender.com",
+    ".onrender.com",
 ]
 
 # Application definition
