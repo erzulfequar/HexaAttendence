@@ -4,7 +4,6 @@ import django
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from django.core.asgi import get_asgi_application
-from django.core.management import call_command
 
 
 ################################################################
@@ -19,32 +18,19 @@ django.setup()
 
 
 ################################################################
-# 2) Auto-run Django migrations on startup (FREE Render fix)
-################################################################
-
-def run_migrations():
-    try:
-        print("🔄 Applying Django migrations...")
-        call_command("migrate", interactive=False)
-        print("✔ Django migrations complete")
-    except Exception as e:
-        print("❌ Migration Error:", e)
-
-
-################################################################
-# 3) Import FASTAPI Routers (AFTER django.setup())
+# 2) Import FASTAPI Routers (AFTER django.setup())
 ################################################################
 
 from fastapi_api.routers import admin_auth
 
 
 ################################################################
-# 4) Create FASTAPI App
+# 3) Create FastAPI App
 ################################################################
 
 app = FastAPI(title="Attendance Portal API", version="1.0.0")
 
-# CORS settings
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -55,30 +41,22 @@ app.add_middleware(
 
 
 ################################################################
-# 5) Run Django migrations when FastAPI starts
-################################################################
-@app.on_event("startup")
-def startup_event():
-    run_migrations()
-
-
-################################################################
-# 6) Include FastAPI Routers
+# 4) Include Routers
 ################################################################
 
 app.include_router(admin_auth.router)
 
 
 ################################################################
-# 7) Mount Django inside FastAPI (UI + Admin Panel)
+# 5) Mount Django (UI + Admin Panel)
 ################################################################
 
 django_app = get_asgi_application()
-app.mount("/", django_app)   # ← सबसे important step
+app.mount("/", django_app)   # <-- DO NOT REMOVE
 
 
 ################################################################
-# 8) Local Run Support
+# 6) Local Run Support
 ################################################################
 
 if __name__ == "__main__":
